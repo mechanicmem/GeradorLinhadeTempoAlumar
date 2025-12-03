@@ -6,6 +6,8 @@
     <title>Cronograma de Manutenção</title>
     <!-- Biblioteca SheetJS -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    <!-- Biblioteca Chart.js para o Gráfico -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <style>
         :root {
@@ -44,12 +46,15 @@
             padding: 15px 20px;
             border-radius: 8px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .header-main {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
             justify-content: space-between;
             gap: 15px;
-            margin-bottom: 20px;
         }
 
         .header-title h1 {
@@ -88,32 +93,32 @@
             color: var(--text-color);
         }
 
-        .btn-upload {
-            background-color: var(--bg-color);
-            color: var(--primary-color);
-            border-color: var(--primary-color);
+        .btn-upload { background-color: var(--bg-color); color: var(--primary-color); border-color: var(--primary-color); }
+        .btn-export { background-color: var(--success-color); color: white; border-color: var(--success-color); }
+        .btn-export:hover { background-color: #15803d; }
+        .btn-import { background-color: #f59e0b; color: white; border-color: #f59e0b; }
+        .btn-import:hover { background-color: #d97706; }
+        .btn-clear { color: var(--danger-color); border-color: #fca5a5; background: #fff; }
+        .btn-clear:hover { background-color: #fef2f2; }
+        .btn-chart { background-color: #8b5cf6; color: white; border-color: #7c3aed; }
+        .btn-chart:hover { background-color: #7c3aed; }
+
+        /* --- Chart Section (Expandable) --- */
+        #chartContainerWrapper {
+            display: none; /* Oculto por padrão */
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            animation: slideDown 0.3s ease-out;
         }
         
-        .btn-export {
-            background-color: var(--success-color);
-            color: white;
-            border-color: var(--success-color);
-        }
-        .btn-export:hover { background-color: #15803d; }
+        @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .btn-import {
-            background-color: #f59e0b;
-            color: white;
-            border-color: #f59e0b;
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
         }
-        .btn-import:hover { background-color: #d97706; }
-
-        .btn-clear {
-            color: var(--danger-color);
-            border-color: #fca5a5;
-            background: #fff;
-        }
-        .btn-clear:hover { background-color: #fef2f2; }
 
         /* --- Alertas --- */
         .pending-alert {
@@ -232,7 +237,6 @@
             padding-top: 10px;
         }
 
-        /* Linha Central */
         .timeline::after {
             content: '';
             position: absolute;
@@ -244,7 +248,7 @@
             z-index: 0;
         }
 
-        /* --- ESTILOS DE GAP (NOVO) --- */
+        /* --- ESTILOS DE GAP --- */
         .timeline-gap {
             position: relative;
             width: 100%;
@@ -252,89 +256,44 @@
             align-items: center;
             justify-content: center;
             z-index: 5;
-            /* A altura é definida inline via JS */
         }
-        
-        /* Máscara branca para cobrir a linha sólida no centro */
         .timeline-gap::before {
-            content: '';
-            position: absolute;
-            left: 50%;
-            top: 0;
-            bottom: 0;
-            width: 10px; /* Largura suficiente para cobrir a linha */
-            margin-left: -5px;
-            background-color: var(--bg-color); /* Mesma cor do fundo */
-            z-index: 1;
+            content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 10px; margin-left: -5px; background-color: var(--bg-color); z-index: 1;
         }
-
-        /* Linha tracejada visual */
         .timeline-gap::after {
-            content: '';
-            position: absolute;
-            left: 50%;
-            top: 0;
-            bottom: 0;
-            width: 2px;
-            margin-left: -1px;
-            border-left: 2px dashed #cbd5e1;
-            z-index: 2;
+            content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; margin-left: -1px; border-left: 2px dashed #cbd5e1; z-index: 2;
         }
-
         .gap-label {
-            background-color: #f1f5f9;
-            color: #94a3b8;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            border: 1px solid #e2e8f0;
-            z-index: 10;
-            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            background-color: #f1f5f9; color: #94a3b8; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; border: 1px solid #e2e8f0; z-index: 10; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
         }
-
-        /* --- Fim Estilos Gap --- */
 
         .timeline.proportional::after {
             width: 4px; margin-left: -2px; background-color: transparent;
             background-image: linear-gradient(to bottom, var(--ruler-color) 2px, transparent 2px);
             background-size: 100% var(--pixels-per-day); background-repeat: repeat-y;
         }
-        
         .timeline.proportional {
             background-image: linear-gradient(#e2e8f0 1px, transparent 1px);
             background-size: 100% var(--pixels-per-day);
         }
 
-        .time-separator {
-            text-align: center; position: relative; z-index: 10; margin: 20px 0; clear: both;
-        }
-        .time-badge {
-            background-color: #94a3b8; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold;
-        }
+        .time-separator { text-align: center; position: relative; z-index: 10; margin: 20px 0; clear: both; }
+        .time-badge { background-color: #94a3b8; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
 
-        .container {
-            padding: 0 30px 20px 30px; position: relative; width: 50%; cursor: pointer; transition: all 0.3s ease;
-        }
-        .container::after {
-            content: ''; position: absolute; width: 12px; height: 12px; right: -6px; background-color: white; border: 3px solid var(--primary-color); top: 20px; border-radius: 50%; z-index: 1; transition: transform 0.2s;
-        }
+        .container { padding: 0 30px 20px 30px; position: relative; width: 50%; cursor: pointer; transition: all 0.3s ease; }
+        .container::after { content: ''; position: absolute; width: 12px; height: 12px; right: -6px; background-color: white; border: 3px solid var(--primary-color); top: 20px; border-radius: 50%; z-index: 1; transition: transform 0.2s; }
         .container:hover::after { transform: scale(1.3); }
         .left { left: 0; text-align: right; }
         .right { left: 50%; text-align: left; }
         .right::after { left: -6px; }
 
-        .content {
-            padding: 15px; position: relative; border-radius: 8px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.2s; text-align: left; border-left: 4px solid transparent;
-        }
+        .content { padding: 15px; position: relative; border-radius: 8px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.2s; text-align: left; border-left: 4px solid transparent; }
         .content:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .content.preventiva { background-color: var(--preventive-bg); border-left-color: var(--preventive-border); }
         .content.corretiva { background-color: var(--corrective-bg); border-left-color: var(--corrective-border); }
         .content.outros { border-left-color: #f59e0b; }
 
-        .date-badge {
-            background-color: #f1f5f9; color: var(--secondary-color); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: inline-block; margin-bottom: 5px;
-        }
+        .date-badge { background-color: #f1f5f9; color: var(--secondary-color); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: inline-block; margin-bottom: 5px; }
         .wo-title { font-size: 0.8rem; color: var(--secondary-color); font-weight: bold; display: block; margin-bottom: 2px; }
         .wo-desc { font-size: 0.95rem; font-weight: 600; color: var(--text-color); line-height: 1.3; margin-bottom: 8px; }
         .wo-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
@@ -361,19 +320,26 @@
         /* Modal */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center; }
         .modal-overlay.active { display: flex; }
-        .modal-window { background: white; width: 90%; max-width: 700px; height: 70vh; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .modal-window { background: white; width: 90%; max-width: 700px; height: 80vh; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
         .modal-header { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
-        .detail-textarea { flex-grow: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; resize: none; font-size: 1rem; }
         .modal-footer { margin-top: 15px; display: flex; justify-content: space-between; align-items: center; }
         .save-btn { background-color: var(--primary-color); color: white; border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer; }
         .close-modal { border: none; background: none; font-size: 1.5rem; cursor: pointer; color: #64748b; }
+        
+        /* Modal Inputs */
+        .modal-fields-row { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .field-group { flex: 1; min-width: 120px; }
+        .field-group label { display: block; font-size: 0.75rem; color: var(--secondary-color); margin-bottom: 4px; font-weight: bold; }
+        .modal-input { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; }
+        .detail-textarea { flex-grow: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; resize: none; font-size: 1rem; }
 
         @media screen and (max-width: 600px) {
-            header { flex-direction: column; text-align: center; }
+            header { text-align: center; }
+            .header-main { flex-direction: column; }
             .timeline::after { left: 20px; }
             .timeline.proportional::after { left: 20px; margin-left: -1px; }
-            .timeline-gap::before { left: 20px; } /* Ajuste gap mobile */
-            .timeline-gap::after { left: 20px; } /* Ajuste gap mobile */
+            .timeline-gap::before { left: 20px; } 
+            .timeline-gap::after { left: 20px; }
             .container { width: 100%; padding-left: 45px; padding-right: 10px; text-align: left; }
             .left, .right { left: 0; }
             .left .wo-meta, .right .wo-meta { justify-content: flex-start; }
@@ -388,22 +354,32 @@
 <body>
 
     <header>
-        <div class="header-title">
-            <h1>Gestão de Manutenção</h1>
-            <p id="reportDateSubtitle">Timeline Interativa</p>
+        <div class="header-main">
+            <div class="header-title">
+                <h1>Gestão de Manutenção</h1>
+                <p id="reportDateSubtitle">Timeline Interativa</p>
+            </div>
+            
+            <div class="header-actions">
+                <label class="btn-action btn-upload" title="Carregar do Excel">
+                    <input type="file" id="excelFile" accept=".xlsx, .xls" />
+                    📄 Excel
+                </label>
+                <button class="btn-action btn-chart" onclick="toggleChart()">📊 Ver Gráfico</button>
+                <button class="btn-action btn-export" onclick="exportProject()" title="Baixar Projeto">💾 Salvar</button>
+                <label class="btn-action btn-import" title="Abrir Projeto">
+                    <input type="file" id="importFile" accept=".json" onchange="importProject(this)" />
+                    📂 Abrir
+                </label>
+                <button class="btn-action btn-clear" onclick="clearAllData()" title="Limpar Tudo">🗑️</button>
+            </div>
         </div>
-        
-        <div class="header-actions">
-            <label class="btn-action btn-upload" title="Carregar do Excel">
-                <input type="file" id="excelFile" accept=".xlsx, .xls" />
-                📄 Excel
-            </label>
-            <button class="btn-action btn-export" onclick="exportProject()" title="Baixar Projeto">💾 Salvar</button>
-            <label class="btn-action btn-import" title="Abrir Projeto">
-                <input type="file" id="importFile" accept=".json" onchange="importProject(this)" />
-                📂 Abrir
-            </label>
-            <button class="btn-action btn-clear" onclick="clearAllData()" title="Limpar Tudo">🗑️</button>
+
+        <!-- Área Expansível do Gráfico -->
+        <div id="chartContainerWrapper">
+            <div class="chart-container">
+                <canvas id="activitiesChart"></canvas>
+            </div>
         </div>
     </header>
 
@@ -452,7 +428,25 @@
                 </div>
                 <button class="close-modal" onclick="closeModal()">&times;</button>
             </div>
+            
+            <!-- Novos Campos -->
+            <div class="modal-fields-row">
+                <div class="field-group">
+                    <label>Periodicidade</label>
+                    <input type="text" id="detailPeriodicity" class="modal-input" placeholder="ex: Semanal">
+                </div>
+                <div class="field-group">
+                    <label>Recurso</label>
+                    <input type="text" id="detailResource" class="modal-input" placeholder="ex: Eletricista">
+                </div>
+                <div class="field-group">
+                    <label>HH</label>
+                    <input type="text" id="detailHH" class="modal-input" placeholder="ex: 2.5">
+                </div>
+            </div>
+
             <textarea id="detailText" class="detail-textarea" placeholder="Digite o detalhamento técnico..."></textarea>
+            
             <div class="modal-footer">
                 <span id="saveStatus" style="color: green; font-size:0.9rem; opacity: 0; transition: opacity 0.5s;">Salvo!</span>
                 <button class="save-btn" onclick="saveDetails()">Salvar Alterações</button>
@@ -473,6 +467,10 @@
         
         let currentEditingId = null;
         let currentActivityCode = null;
+
+        // Variáveis do Gráfico
+        let myChart = null;
+        let isChartVisible = false;
 
         const STORAGE_KEY_DATA = 'timeline_main_data';
         const STORAGE_KEY_META = 'timeline_meta_info';
@@ -518,6 +516,77 @@
             return Math.round(Math.abs((d1 - d2) / oneDay));
         }
 
+        // --- Gráfico ---
+        function toggleChart() {
+            const wrapper = document.getElementById('chartContainerWrapper');
+            isChartVisible = !isChartVisible;
+            
+            if (isChartVisible) {
+                wrapper.style.display = 'block';
+                updateChart();
+                document.querySelector('.btn-chart').textContent = '❌ Fechar Gráfico';
+            } else {
+                wrapper.style.display = 'none';
+                document.querySelector('.btn-chart').textContent = '📊 Ver Gráfico';
+            }
+        }
+
+        function updateChart() {
+            // Se o gráfico não estiver visível ou não houver dados, não faz nada
+            if (!isChartVisible || fullData.length === 0) return;
+
+            const ctx = document.getElementById('activitiesChart').getContext('2d');
+            
+            // Agrupar dados por dia
+            const counts = {};
+            fullData.forEach(item => {
+                const dateKey = item.date; // DD/MM/YYYY
+                counts[dateKey] = (counts[dateKey] || 0) + 1;
+            });
+
+            // Ordenar datas
+            const sortedDates = Object.keys(counts).sort((a, b) => {
+                const partsA = a.split('/');
+                const partsB = b.split('/');
+                return new Date(partsA[2], partsA[1]-1, partsA[0]) - new Date(partsB[2], partsB[1]-1, partsB[0]);
+            });
+
+            const dataValues = sortedDates.map(d => counts[d]);
+
+            // Se já existe gráfico, destruir para recriar
+            if (myChart) {
+                myChart.destroy();
+            }
+
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedDates,
+                    datasets: [{
+                        label: 'Atividades por Dia',
+                        data: dataValues,
+                        backgroundColor: 'rgba(37, 99, 235, 0.6)',
+                        borderColor: 'rgba(37, 99, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { stepSize: 1 }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: 'Volume de Atividades Diárias' }
+                    }
+                }
+            });
+        }
+
         // --- Export/Import/Persistence/Excel ---
         function exportProject() {
             if(fullData.length === 0) { alert("Não há dados."); return; }
@@ -553,6 +622,10 @@
                     document.getElementById('reportDateSubtitle').innerText = pd.meta?.subtitle || "Importado";
                     applyFiltersAndRender();
                     alert("Importado com sucesso!");
+                    
+                    // Atualiza gráfico se estiver aberto
+                    if(isChartVisible) updateChart();
+
                 } catch (err) { alert("Erro ao importar."); }
                 input.value = '';
             };
@@ -631,6 +704,9 @@
             saveMainDataToStorage(fullData, { subtitle: reportSubtitle });
             checkPendingAlert(pendingCount);
             applyFiltersAndRender();
+            
+            // Atualiza gráfico se estiver aberto
+            if(isChartVisible) updateChart();
         }
 
         function checkPendingAlert(count) {
@@ -724,16 +800,12 @@
                 if (isProportional && lastDate) {
                     const daysDiff = getDaysDiff(itemDate, lastDate);
                     
-                    // Se houver mais de 1 dia de diferença (significa pelo menos 1 dia inteiro vazio no meio)
                     if (daysDiff > 1) {
                         const gapDiv = document.createElement('div');
                         gapDiv.className = 'timeline-gap';
-                        
-                        // Altura visual: Capamos em 60 dias para não quebrar a tela
                         const effectiveGap = Math.min(daysDiff, 60); 
                         gapDiv.style.height = `${effectiveGap * PIXELS_PER_DAY}px`;
                         
-                        // Etiqueta
                         const label = document.createElement('span');
                         label.className = 'gap-label';
                         label.innerText = `${daysDiff - 1} dia(s) sem atividade`;
@@ -741,8 +813,6 @@
                         
                         container.appendChild(gapDiv);
                     } else if (daysDiff === 1) {
-                         // Dias seguidos (ex: Segunda -> Terça), espaço normal (visual 1 dia)
-                         // Não faz nada especial, o css de margin já dá um respiro, ou podemos forçar
                          marginTop = PIXELS_PER_DAY;
                     }
                 }
@@ -784,7 +854,7 @@
             });
         }
 
-        // --- Modal ---
+        // --- Modal e Anexos Atualizados ---
         function openModal(wo, actCode, desc) {
             const modal = document.getElementById('detailModal');
             currentEditingId = wo;
@@ -793,20 +863,57 @@
             const infoEl = document.getElementById('modalActivityInfo');
             if (currentActivityCode) infoEl.innerHTML = `Vínculo: Código <b>${currentActivityCode}</b>`;
             else infoEl.innerHTML = `Vínculo: Exclusivo WO`;
+            
+            // Carregar dados salvos
             const key = currentActivityCode ? `annex_act_${currentActivityCode}` : `annex_wo_${wo}`;
-            document.getElementById('detailText').value = localStorage.getItem(key) || "";
+            const savedRaw = localStorage.getItem(key);
+            
+            let data = { text: "", periodicity: "", resource: "", hh: "" };
+            
+            // Tenta parsear JSON, se falhar assume que é texto antigo (legacy)
+            if(savedRaw) {
+                try {
+                    const parsed = JSON.parse(savedRaw);
+                    if (typeof parsed === 'object' && parsed !== null) {
+                        data = { ...data, ...parsed };
+                    } else {
+                        data.text = savedRaw;
+                    }
+                } catch(e) {
+                    data.text = savedRaw;
+                }
+            }
+
+            document.getElementById('detailText').value = data.text;
+            document.getElementById('detailPeriodicity').value = data.periodicity;
+            document.getElementById('detailResource').value = data.resource;
+            document.getElementById('detailHH').value = data.hh;
+
             document.getElementById('saveStatus').style.opacity = '0';
             modal.classList.add('active');
         }
+
         function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
+
         function saveDetails() {
-            const text = document.getElementById('detailText').value;
+            // Coleta dados dos inputs
+            const data = {
+                text: document.getElementById('detailText').value,
+                periodicity: document.getElementById('detailPeriodicity').value,
+                resource: document.getElementById('detailResource').value,
+                hh: document.getElementById('detailHH').value
+            };
+
             const key = currentActivityCode ? `annex_act_${currentActivityCode}` : `annex_wo_${currentEditingId}`;
-            localStorage.setItem(key, text);
+            
+            // Salva como JSON string
+            localStorage.setItem(key, JSON.stringify(data));
+            
             const status = document.getElementById('saveStatus');
             status.style.opacity = '1';
             setTimeout(() => status.style.opacity = '0', 2000);
         }
+
         document.getElementById('detailModal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
     </script>
 </body>
