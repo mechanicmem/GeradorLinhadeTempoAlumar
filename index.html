@@ -20,6 +20,7 @@
             --text-color: #1e293b;
             --danger-color: #ef4444;
             --success-color: #16a34a;
+            --ruler-color: #cbd5e1;
         }
 
         * {
@@ -136,21 +137,69 @@
             margin-bottom: 20px;
         }
 
-        .controls-bar {
+        .controls-row {
             display: flex;
-            justify-content: center;
-            gap: 8px;
-            flex-wrap: wrap;
+            align-items: center;
+            gap: 15px;
             background: rgba(248, 250, 252, 0.95);
             padding: 8px 15px;
             border-radius: 30px;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-            width: fit-content;
+            flex-wrap: wrap;
+            justify-content: center;
         }
+
+        /* Toggles */
+        .toggle-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+            font-weight: 600;
+            border-right: 1px solid #cbd5e1;
+            padding-right: 15px;
+            margin-right: 5px;
+            cursor: pointer;
+        }
+        
+        /* Remove border from last toggle */
+        .toggle-label:nth-last-child(4) { /* Ajuste baseado na ordem dos botões */
+             border-right: 1px solid #cbd5e1;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 36px;
+            height: 20px;
+        }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e1;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { transform: translateX(16px); }
 
         /* Filtro Ativo (Chip) */
         .active-filter-chip {
-            display: none; /* Escondido por padrão */
+            display: none;
             align-items: center;
             background-color: var(--primary-color);
             color: white;
@@ -202,6 +251,7 @@
             padding-top: 10px;
         }
 
+        /* Linha Central */
         .timeline::after {
             content: '';
             position: absolute;
@@ -209,6 +259,25 @@
             background-color: #cbd5e1;
             top: 0; bottom: 0; left: 50%;
             margin-left: -1px;
+            transition: all 0.3s ease;
+        }
+
+        /* --- ESTILO PROPORCIONAL (Régua) --- */
+        .timeline.proportional::after {
+            width: 4px;
+            margin-left: -2px;
+            background-color: transparent;
+            /* Cria marcas de régua: linha solida a cada 20px */
+            background-image: linear-gradient(to bottom, var(--ruler-color) 50%, transparent 50%);
+            background-size: 2px 20px; /* 10px linha, 10px espaço? ajustado para parecer ticks */
+            background-repeat: repeat-y;
+        }
+        
+        /* Fundo discreto para dias na timeline inteira (Opcional, mas pedido) */
+        .timeline.proportional {
+            /* Linhas horizontais discretas no fundo */
+            background-image: linear-gradient(#e2e8f0 1px, transparent 1px);
+            background-size: 100% 20px; /* 20px = 1 dia na escala padrão */
         }
 
         .time-separator {
@@ -233,6 +302,7 @@
             position: relative;
             width: 50%;
             cursor: pointer;
+            transition: all 0.3s ease;
         }
 
         .container::after {
@@ -327,6 +397,32 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
+        /* --- MODO COMPACTO --- */
+        .timeline.compact .time-separator { margin: 10px 0; }
+        .timeline.compact .time-badge { padding: 2px 8px; font-size: 0.7rem; }
+        .timeline.compact .container { padding-bottom: 8px; }
+        .timeline.compact .container::after { top: 12px; width: 10px; height: 10px; right: -5px; border-width: 2px; }
+        .timeline.compact .right::after { left: -5px; }
+        .timeline.compact .content { padding: 8px 12px; }
+        .timeline.compact .wo-desc {
+            font-size: 0.85rem;
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis;
+            margin-bottom: 4px;
+            line-height: 1.2;
+        }
+        .timeline.compact .wo-meta { margin-top: 4px; gap: 3px; }
+        .timeline.compact .tag { padding: 1px 4px; font-size: 0.65rem; }
+        .timeline.compact .wo-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2px;
+        }
+        .timeline.compact .date-badge { margin-bottom: 0; font-size: 0.7rem; padding: 1px 6px; }
+        .timeline.compact .wo-title { margin-bottom: 0; font-size: 0.75rem; }
+
         /* --- Modal --- */
         .modal-overlay {
             display: none;
@@ -351,12 +447,15 @@
         @media screen and (max-width: 600px) {
             header { flex-direction: column; text-align: center; }
             .timeline::after { left: 20px; }
+            .timeline.proportional::after { left: 20px; margin-left: -1px; } /* Ajuste régua mobile */
             .container { width: 100%; padding-left: 45px; padding-right: 10px; text-align: left; }
             .left, .right { left: 0; }
             .left .wo-meta, .right .wo-meta { justify-content: flex-start; }
             .container::after { left: 14px; }
-            .controls-bar { width: 100%; overflow-x: auto; justify-content: flex-start; }
+            .timeline.compact .container::after { left: 15px; }
+            .controls-row { width: 100%; overflow-x: auto; justify-content: flex-start; }
             .header-actions { justify-content: center; }
+            .toggle-label { width: 100%; border-right: none; margin-bottom: 5px; justify-content: center;}
         }
     </style>
 </head>
@@ -369,39 +468,46 @@
         </div>
         
         <div class="header-actions">
-            <!-- Upload Excel -->
             <label class="btn-action btn-upload" title="Carregar do Excel">
                 <input type="file" id="excelFile" accept=".xlsx, .xls" />
                 📄 Excel
             </label>
-
-            <!-- Exportar Projeto -->
-            <button class="btn-action btn-export" onclick="exportProject()" title="Baixar Projeto (com notas)">
-                💾 Salvar Projeto
-            </button>
-
-            <!-- Importar Projeto -->
-            <label class="btn-action btn-import" title="Abrir Projeto Salvo">
+            <button class="btn-action btn-export" onclick="exportProject()" title="Baixar Projeto">💾 Salvar</button>
+            <label class="btn-action btn-import" title="Abrir Projeto">
                 <input type="file" id="importFile" accept=".json" onchange="importProject(this)" />
-                📂 Abrir Projeto
+                📂 Abrir
             </label>
-            
-            <button class="btn-action btn-clear" onclick="clearAllData()" title="Limpar Tudo">
-                🗑️
-            </button>
+            <button class="btn-action btn-clear" onclick="clearAllData()" title="Limpar Tudo">🗑️</button>
         </div>
     </header>
 
     <div id="pendingAlert" class="pending-alert"></div>
 
     <div class="controls-wrapper">
-        <!-- Chip de Filtro Ativo -->
         <div id="activeActivityFilter" class="active-filter-chip">
             <span id="activeFilterText">Atividade: XYZ</span>
             <button onclick="clearActivityFilter()">×</button>
         </div>
 
-        <div class="controls-bar">
+        <div class="controls-row">
+            <!-- Toggle: Compacto -->
+            <div class="toggle-label">
+                Compacto
+                <label class="switch">
+                    <input type="checkbox" id="compactModeSwitch" onchange="toggleCompactMode()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
+            <!-- Toggle: Proporcional -->
+            <div class="toggle-label">
+                Espaço Proporcional
+                <label class="switch">
+                    <input type="checkbox" id="proportionalModeSwitch" onchange="toggleProportionalMode()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+
             <button class="btn-filter active" onclick="setFilter('all', this)">Todas</button>
             <button class="btn-filter" onclick="setFilter('preventiva', this)">Preventivas</button>
             <button class="btn-filter" onclick="setFilter('corretiva', this)">Corretivas</button>
@@ -424,7 +530,7 @@
                 </div>
                 <button class="close-modal" onclick="closeModal()">&times;</button>
             </div>
-            <textarea id="detailText" class="detail-textarea" placeholder="Digite o detalhamento técnico, passo a passo ou observações..."></textarea>
+            <textarea id="detailText" class="detail-textarea" placeholder="Digite o detalhamento técnico..."></textarea>
             <div class="modal-footer">
                 <span id="saveStatus" style="color: green; font-size:0.9rem; opacity: 0; transition: opacity 0.5s;">Salvo!</span>
                 <button class="save-btn" onclick="saveDetails()">Salvar Alterações</button>
@@ -439,13 +545,16 @@
         
         let currentFilter = 'all';
         let sortOrder = 'asc'; 
-        let currentActivityFilter = null; // Filtro específico de atividade
+        let currentActivityFilter = null;
+        let isCompact = false; 
+        let isProportional = false; // Novo Estado
         
         let currentEditingId = null;
         let currentActivityCode = null;
 
         const STORAGE_KEY_DATA = 'timeline_main_data';
         const STORAGE_KEY_META = 'timeline_meta_info';
+        const PIXELS_PER_DAY = 20; // Escala do modo proporcional
 
         const COLS = {
             REPORT_DATE: 0, WO: 4, DESC: 5, EXEC_DATE: 9, ACT_CODE: 11, ASSET: 13, CAUSE: 27
@@ -453,7 +562,27 @@
 
         window.onload = function() { loadSavedData(); }
 
-        // --- Gerador de Cores ---
+        // --- Toggles ---
+        function toggleCompactMode() {
+            const toggle = document.getElementById('compactModeSwitch');
+            isCompact = toggle.checked;
+            updateTimelineClass();
+        }
+
+        function toggleProportionalMode() {
+            const toggle = document.getElementById('proportionalModeSwitch');
+            isProportional = toggle.checked;
+            updateTimelineClass();
+            renderTimeline(filteredData); // Re-renderizar para calcular margens
+        }
+
+        function updateTimelineClass() {
+            const timeline = document.getElementById('timelineList');
+            timeline.classList.toggle('compact', isCompact);
+            timeline.classList.toggle('proportional', isProportional);
+        }
+
+        // --- Utils ---
         function stringToColor(str) {
             if(!str) return '#cbd5e1';
             let hash = 0;
@@ -462,120 +591,78 @@
             return '#' + "00000".substring(0, 6 - c.length) + c;
         }
 
-        // --- Exportação e Importação de Projeto (JSON) ---
-        function exportProject() {
-            if(fullData.length === 0) {
-                alert("Não há dados para exportar.");
-                return;
-            }
+        function getDaysDiff(date1, date2) {
+            const oneDay = 24 * 60 * 60 * 1000; 
+            return Math.round(Math.abs((date1 - date2) / oneDay));
+        }
 
-            // Coleta todas as notas salvas no localStorage que começam com 'annex_'
+        // --- Export/Import/Persistence/Excel (Mantidos iguais) ---
+        function exportProject() {
+            if(fullData.length === 0) { alert("Não há dados."); return; }
             const notes = {};
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
-                if (key.startsWith('annex_')) {
-                    notes[key] = localStorage.getItem(key);
-                }
+                if (key.startsWith('annex_')) notes[key] = localStorage.getItem(key);
             }
-
             const projectData = {
                 timestamp: new Date().toISOString(),
                 data: fullData,
                 notes: notes,
-                meta: {
-                    subtitle: document.getElementById('reportDateSubtitle').innerText
-                }
+                meta: { subtitle: document.getElementById('reportDateSubtitle').innerText }
             };
-
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData));
-            const downloadAnchorNode = document.createElement('a');
-            downloadAnchorNode.setAttribute("href", dataStr);
-            downloadAnchorNode.setAttribute("download", "cronograma_manutencao.json");
-            document.body.appendChild(downloadAnchorNode);
-            downloadAnchorNode.click();
-            downloadAnchorNode.remove();
+            const a = document.createElement('a');
+            a.href = dataStr;
+            a.download = "cronograma_manutencao.json";
+            document.body.appendChild(a); a.click(); a.remove();
         }
 
         function importProject(input) {
             const file = input.files[0];
             if (!file) return;
-
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const projectData = JSON.parse(e.target.result);
-                    
-                    if(!projectData.data || !projectData.notes) {
-                        throw new Error("Formato de arquivo inválido");
-                    }
-
-                    // Restaura dados
-                    fullData = projectData.data;
-                    // Corrige datas
+                    const pd = JSON.parse(e.target.result);
+                    if(!pd.data) throw new Error("Inválido");
+                    fullData = pd.data;
                     fullData.forEach(item => item.rawDate = new Date(item.rawDate));
-
-                    // Restaura notas no localStorage
-                    Object.keys(projectData.notes).forEach(key => {
-                        localStorage.setItem(key, projectData.notes[key]);
-                    });
-
-                    // Salva estado principal
-                    saveMainDataToStorage(fullData, { subtitle: projectData.meta?.subtitle });
-                    
-                    document.getElementById('reportDateSubtitle').innerText = projectData.meta?.subtitle || "Projeto Importado";
-                    
-                    // Renderiza
+                    if(pd.notes) Object.keys(pd.notes).forEach(k => localStorage.setItem(k, pd.notes[k]));
+                    saveMainDataToStorage(fullData, { subtitle: pd.meta?.subtitle });
+                    document.getElementById('reportDateSubtitle').innerText = pd.meta?.subtitle || "Importado";
                     applyFiltersAndRender();
-                    alert("Projeto importado com sucesso!");
-
-                } catch (err) {
-                    console.error(err);
-                    alert("Erro ao importar arquivo. Verifique se é um JSON válido gerado por este sistema.");
-                }
-                input.value = ''; // Limpa input
+                    alert("Importado com sucesso!");
+                } catch (err) { alert("Erro ao importar."); }
+                input.value = '';
             };
             reader.readAsText(file);
         }
 
-        // --- Persistência Local ---
         function saveMainDataToStorage(dataRows, metaInfo) {
             try {
                 localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(dataRows));
                 if(metaInfo) localStorage.setItem(STORAGE_KEY_META, JSON.stringify(metaInfo));
-            } catch (e) {
-                console.error(e);
-                alert("Atenção: Espaço local cheio. Alguns dados podem não persistir ao fechar a aba.");
-            }
+            } catch (e) { console.error(e); alert("Memória cheia."); }
         }
 
         function loadSavedData() {
             const savedData = localStorage.getItem(STORAGE_KEY_DATA);
             const savedMeta = localStorage.getItem(STORAGE_KEY_META);
-
             if (savedData) {
                 fullData = JSON.parse(savedData);
                 fullData.forEach(item => item.rawDate = new Date(item.rawDate));
-
-                if(savedMeta) {
-                    const meta = JSON.parse(savedMeta);
-                    document.getElementById('reportDateSubtitle').innerText = meta.subtitle || "Dados recuperados";
-                }
+                if(savedMeta) document.getElementById('reportDateSubtitle').innerText = JSON.parse(savedMeta).subtitle || "Recuperado";
                 applyFiltersAndRender();
             } else {
-                document.getElementById('timelineList').innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;">Nenhum dado salvo. Carregue um Excel ou Importe um Projeto.</div>';
+                document.getElementById('timelineList').innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;">Nenhum dado salvo. Carregue um Excel.</div>';
             }
         }
 
         function clearAllData() {
-            if(confirm("Tem certeza? Isso apagará TUDO (Excel e Notas locais). Salve o projeto antes se quiser guardar.")) {
-                localStorage.clear();
-                location.reload();
-            }
+            if(confirm("Apagar tudo?")) { localStorage.clear(); location.reload(); }
         }
 
-        // --- Excel Handler ---
         document.getElementById('excelFile').addEventListener('change', handleFile);
-
         function handleFile(e) {
             const file = e.target.files[0];
             const reader = new FileReader();
@@ -601,18 +688,15 @@
             fullData = [];
             pendingCount = 0;
             let reportSubtitle = "Relatório carregado";
-
             if(dataRows.length > 0 && dataRows[0][COLS.REPORT_DATE]) {
                 reportSubtitle = `Relatório gerado em: ${formatDate(dataRows[0][COLS.REPORT_DATE])}`;
                 document.getElementById('reportDateSubtitle').innerText = reportSubtitle;
             }
-
             dataRows.forEach(row => {
                 const wo = row[COLS.WO];
                 const execDate = row[COLS.EXEC_DATE];
                 if (!wo || wo === "S/N") return; 
                 if (!execDate) { pendingCount++; return; }
-
                 fullData.push({
                     wo: wo,
                     desc: row[COLS.DESC] || "Sem descrição",
@@ -623,7 +707,6 @@
                     cause: row[COLS.CAUSE] || "OUTROS"
                 });
             });
-
             saveMainDataToStorage(fullData, { subtitle: reportSubtitle });
             checkPendingAlert(pendingCount);
             applyFiltersAndRender();
@@ -631,20 +714,14 @@
 
         function checkPendingAlert(count) {
             const alertEl = document.getElementById('pendingAlert');
-            if (count > 0) {
-                alertEl.style.display = 'block';
-                alertEl.innerText = `⚠️ ${count} atividades sem Data de Execução foram ocultadas.`;
-            } else {
-                alertEl.style.display = 'none';
-            }
+            if (count > 0) { alertEl.style.display = 'block'; alertEl.innerText = `⚠️ ${count} atividades sem Data de Execução ocultadas.`; }
+            else { alertEl.style.display = 'none'; }
         }
 
-        // --- Lógica de Filtros ---
+        // --- Filtros ---
         function setFilter(type, btn) {
             currentFilter = type;
-            document.querySelectorAll('.btn-filter').forEach(b => {
-                if(!b.classList.contains('btn-sort')) b.classList.remove('active');
-            });
+            document.querySelectorAll('.btn-filter').forEach(b => { if(!b.classList.contains('btn-sort')) b.classList.remove('active'); });
             btn.classList.add('active');
             applyFiltersAndRender();
         }
@@ -655,7 +732,6 @@
             applyFiltersAndRender();
         }
 
-        // Filtra por uma atividade específica ao clicar no código
         function filterByActivity(code) {
             currentActivityFilter = code;
             document.getElementById('activeActivityFilter').style.display = 'flex';
@@ -672,12 +748,7 @@
 
         function applyFiltersAndRender() {
             filteredData = fullData.filter(item => {
-                // 1. Filtro de Atividade Específica (Prioritário)
-                if (currentActivityFilter && item.activityCode !== currentActivityFilter) {
-                    return false;
-                }
-
-                // 2. Filtro de Tipo (Preventiva/Corretiva)
+                if (currentActivityFilter && item.activityCode !== currentActivityFilter) return false;
                 if (currentFilter === 'all') return true;
                 const cause = (item.cause || "").toUpperCase();
                 if (currentFilter === 'preventiva') return cause.includes('PREVENTIV');
@@ -701,27 +772,46 @@
             return "outros";
         }
 
+        // --- RENDERIZADOR PRINCIPAL ---
         function renderTimeline(data) {
             const container = document.getElementById('timelineList');
             container.innerHTML = '';
             
             if(data.length === 0) {
-                container.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">Nenhuma atividade encontrada com estes filtros.</div>';
+                container.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">Nenhuma atividade.</div>';
                 return;
             }
 
+            let lastDate = null;
             let lastMonthYear = "";
 
             data.forEach((item, index) => {
                 const itemDate = new Date(item.rawDate);
                 const currentMonthYear = itemDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
                 
+                // Separador de Mês (Sempre mostrado, a menos que seja o mesmo)
                 if (currentMonthYear !== lastMonthYear) {
                     const separator = document.createElement('div');
                     separator.className = 'time-separator';
                     separator.innerHTML = `<span class="time-badge">${currentMonthYear.toUpperCase()}</span>`;
+                    
+                    // Se estiver no modo proporcional, e mudou de mês, talvez dar um espaço extra?
+                    // Deixaremos natural por enquanto, pois a data real já define o espaço.
+                    
                     container.appendChild(separator);
                     lastMonthYear = currentMonthYear;
+                }
+
+                // Cálculo de Espaçamento Proporcional
+                let marginTop = 0;
+                if (isProportional && lastDate) {
+                    // Diferença em dias absoluto (para funcionar em ordenação invertida tambem)
+                    const daysDiff = getDaysDiff(itemDate, lastDate);
+                    
+                    // Se for mais de 60 dias, capar em 60 para não ficar gigante, mas mostrar que é longe
+                    const effectiveDays = Math.min(daysDiff, 60); 
+                    
+                    marginTop = effectiveDays * PIXELS_PER_DAY;
                 }
 
                 const side = index % 2 === 0 ? 'left' : 'right';
@@ -732,26 +822,33 @@
                 const div = document.createElement('div');
                 div.className = `container ${side}`;
                 
+                // Aplicar margem dinâmica se proporcional
+                if (isProportional) {
+                    div.style.marginTop = `${marginTop}px`;
+                }
+
                 div.innerHTML = `
                     <div class="content ${styleClass}" onclick="openModal('${item.wo}', '${item.activityCode}', '${safeDesc}')">
-                        <span class="date-badge">${item.date}</span>
-                        <span class="wo-title">WO: ${item.wo}</span>
+                        <div class="wo-header-row">
+                             <span class="wo-title">WO: ${item.wo}</span>
+                             <span class="date-badge">${item.date}</span>
+                        </div>
                         <div class="wo-desc">${item.desc}</div>
                         <div class="wo-meta">
                             ${item.asset ? `<span class="tag">🏭 ${item.asset}</span>` : ''}
                             ${item.activityCode ? 
                                 `<button class="tag tag-activity" 
                                     style="background-color: ${activityColor};" 
-                                    title="Clique para filtrar apenas esta atividade"
                                     onclick="event.stopPropagation(); filterByActivity('${item.activityCode}')">
-                                    Cód: ${item.activityCode}
-                                 </button>` 
-                                : ''}
+                                    ${item.activityCode}
+                                 </button>` : ''}
                             <span class="tag">${item.cause}</span>
                         </div>
                     </div>
                 `;
                 container.appendChild(div);
+                
+                lastDate = itemDate;
             });
         }
 
@@ -760,25 +857,16 @@
             const modal = document.getElementById('detailModal');
             currentEditingId = wo;
             currentActivityCode = actCode === "undefined" || actCode === "" ? null : actCode;
-
             document.getElementById('modalWoTitle').innerText = `WO: ${wo}`;
             const infoEl = document.getElementById('modalActivityInfo');
-            
-            if (currentActivityCode) {
-                infoEl.innerHTML = `Vínculo: Código de Atividade <b>${currentActivityCode}</b>`;
-            } else {
-                infoEl.innerHTML = `Vínculo: Exclusivo desta WO`;
-            }
-
+            if (currentActivityCode) infoEl.innerHTML = `Vínculo: Código <b>${currentActivityCode}</b>`;
+            else infoEl.innerHTML = `Vínculo: Exclusivo WO`;
             const key = currentActivityCode ? `annex_act_${currentActivityCode}` : `annex_wo_${wo}`;
             document.getElementById('detailText').value = localStorage.getItem(key) || "";
             document.getElementById('saveStatus').style.opacity = '0';
-
             modal.classList.add('active');
         }
-
         function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
-
         function saveDetails() {
             const text = document.getElementById('detailText').value;
             const key = currentActivityCode ? `annex_act_${currentActivityCode}` : `annex_wo_${currentEditingId}`;
@@ -787,11 +875,7 @@
             status.style.opacity = '1';
             setTimeout(() => status.style.opacity = '0', 2000);
         }
-
-        document.getElementById('detailModal').addEventListener('click', function(e) {
-            if (e.target === this) closeModal();
-        });
-
+        document.getElementById('detailModal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
     </script>
 </body>
 </html>
