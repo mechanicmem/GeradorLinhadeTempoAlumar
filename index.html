@@ -23,6 +23,7 @@
             --danger-color: #ef4444;
             --success-color: #16a34a;
             --warning-color: #f59e0b;
+            --star-color: #eab308;
             --ruler-color: #cbd5e1;
             /* Escala: 40px visualmente representa 1 dia */
             --pixels-per-day: 40px; 
@@ -62,6 +63,20 @@
             color: var(--primary-color);
             font-size: 1.2rem;
             margin: 0;
+        }
+
+        /* Estilo para o título editável */
+        #appTitle {
+            cursor: text;
+            border-bottom: 1px dashed transparent;
+            transition: border-color 0.2s;
+            min-width: 200px;
+            display: inline-block;
+        }
+        #appTitle:hover, #appTitle:focus {
+            border-bottom-color: var(--primary-color);
+            outline: none;
+            background-color: #f8fafc;
         }
         
         .header-title p {
@@ -170,7 +185,7 @@
             margin-right: 5px;
             cursor: pointer;
         }
-        .toggle-label:nth-last-child(5) { border-right: 1px solid #cbd5e1; } /* Ajustado para 5 por causa do novo filtro */
+        .toggle-label:nth-last-child(5) { border-right: 1px solid #cbd5e1; }
 
         .switch {
             position: relative;
@@ -230,7 +245,22 @@
         .btn-filter:hover { background: #e2e8f0; }
         .btn-filter.active { background: white; color: var(--primary-color); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         .btn-sort { color: var(--text-color); }
-        .btn-filter-star.active { color: #eab308; } /* Cor amarela quando ativo */
+        
+        /* Estilo Específico para o Filtro de Estrela */
+        .btn-filter-star {
+            color: #b45309; 
+            border: 1px solid #fcd34d;
+            background-color: #fffbeb;
+        }
+        .btn-filter-star:hover {
+            background-color: #fef3c7;
+        }
+        .btn-filter-star.active {
+            background-color: var(--star-color); 
+            color: white;
+            border-color: var(--star-color);
+            box-shadow: 0 2px 4px rgba(234, 179, 8, 0.4);
+        }
 
         /* --- Timeline --- */
         .timeline {
@@ -317,12 +347,27 @@
         .wo-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
         .wo-title { font-size: 0.8rem; color: var(--secondary-color); font-weight: bold; display: block; }
         
-        /* Botão Estrela (Aumentado conforme pedido) */
+        /* Botão Estrela SUPER EVIDENTE */
         .btn-star {
-            background: none; border: none; cursor: pointer; font-size: 1.6rem; color: #cbd5e1; transition: color 0.2s; line-height: 1; padding: 0 0 0 5px;
+            background: none; 
+            border: none; 
+            cursor: pointer; 
+            font-size: 2.2rem; /* Bem grande */
+            color: #cbd5e1; 
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            line-height: 1; 
+            padding: 0 0 0 10px;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
-        .btn-star.starred { color: #eab308; }
-        .btn-star:hover { color: #facc15; }
+        .btn-star.starred { 
+            color: var(--star-color); 
+            text-shadow: 0 0 5px rgba(234, 179, 8, 0.6); /* Efeito de brilho */
+            transform: scale(1.1);
+        }
+        .btn-star:hover { 
+            color: #fbbf24; 
+            transform: scale(1.2);
+        }
 
         .wo-desc { font-size: 0.95rem; font-weight: 600; color: var(--text-color); line-height: 1.3; margin-bottom: 8px; }
         .wo-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
@@ -347,7 +392,7 @@
         .timeline.compact .wo-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
         .timeline.compact .date-badge { margin-bottom: 0; font-size: 0.7rem; padding: 1px 6px; }
         .timeline.compact .wo-title { margin-bottom: 0; font-size: 0.75rem; }
-        .timeline.compact .btn-star { font-size: 1.2rem; }
+        .timeline.compact .btn-star { font-size: 1.5rem; }
 
         /* Modal */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center; }
@@ -388,7 +433,7 @@
     <header>
         <div class="header-main">
             <div class="header-title">
-                <h1>Gestão de Manutenção</h1>
+                <h1 id="appTitle" contenteditable="true" title="Clique para editar o título">Gestão de Manutenção</h1>
                 <p id="reportDateSubtitle">Timeline Interativa</p>
             </div>
             
@@ -441,7 +486,8 @@
             <button class="btn-filter active" onclick="setFilter('all', this)">Todas</button>
             <button class="btn-filter" onclick="setFilter('preventiva', this)">Preventivas</button>
             <button class="btn-filter" onclick="setFilter('corretiva', this)">Corretivas</button>
-            <button class="btn-filter btn-filter-star" onclick="setFilter('starred', this)">⭐ Favoritos</button>
+            <!-- Botão de Favoritos Toggleável -->
+            <button class="btn-filter btn-filter-star" id="btnFilterStar" onclick="toggleStarredFilter(this)">⭐ Favoritos</button>
             <span style="border-left: 1px solid #ccc; margin: 0 5px;"></span>
             <button class="btn-filter btn-sort" onclick="toggleSort(this)">📅 Antigos ⬇️</button>
         </div>
@@ -495,7 +541,8 @@
         let filteredData = []; 
         let pendingCount = 0; 
         
-        let currentFilter = 'all';
+        let currentFilter = 'all'; // all, preventiva, corretiva
+        let isStarredFilter = false; // toggle independente
         let sortOrder = 'asc'; 
         let currentActivityFilter = null;
         let isCompact = false; 
@@ -507,6 +554,7 @@
         // Favoritos
         let starredWOs = new Set();
         const STORAGE_KEY_STARRED = 'timeline_starred_wos';
+        const STORAGE_KEY_TITLE = 'timeline_app_title';
 
         // Variáveis do Gráfico
         let myChart = null;
@@ -533,6 +581,11 @@
             // Tecla ESC para fechar modal
             document.addEventListener('keydown', (e) => {
                 if(e.key === 'Escape') closeModal();
+            });
+            
+            // Listener para salvar título editável
+            document.getElementById('appTitle').addEventListener('input', function() {
+                localStorage.setItem(STORAGE_KEY_TITLE, this.innerText);
             });
 
             // Tooltip no MouseMove
@@ -696,19 +749,32 @@
                 isCompact,
                 isProportional,
                 currentFilter,
+                isStarredFilter, // Salvando o estado do toggle
                 sortOrder
             };
+            
+            // Obter Título Editável
+            const title = document.getElementById('appTitle').innerText.trim() || "Cronograma_Manutencao";
 
             const projectData = {
                 timestamp: new Date().toISOString(),
                 data: fullData,
                 notes: notes,
-                settings: settings, // Nova chave
-                meta: { subtitle: document.getElementById('reportDateSubtitle').innerText }
+                settings: settings, 
+                meta: { 
+                    subtitle: document.getElementById('reportDateSubtitle').innerText,
+                    title: title // Salva o título no JSON
+                }
             };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData));
+            
+            // Gerar nome do arquivo baseado no título
+            const cleanTitle = title.replace(/[^a-z0-9\u00C0-\u00FF]/gi, '_').toLowerCase();
+            const fileName = cleanTitle ? `${cleanTitle}.json` : "cronograma_manutencao.json";
+
             const a = document.createElement('a');
-            a.href = dataStr; a.download = "cronograma_manutencao.json";
+            a.href = dataStr; 
+            a.download = fileName;
             document.body.appendChild(a); a.click(); a.remove();
         }
 
@@ -740,28 +806,37 @@
                         isCompact = !!pd.settings.isCompact;
                         isProportional = !!pd.settings.isProportional;
                         currentFilter = pd.settings.currentFilter || 'all';
+                        isStarredFilter = !!pd.settings.isStarredFilter;
                         sortOrder = pd.settings.sortOrder || 'asc';
                         
                         // Atualizar Controles da UI
                         document.getElementById('compactModeSwitch').checked = isCompact;
                         document.getElementById('proportionalModeSwitch').checked = isProportional;
-                        updateTimelineClass(); // Atualiza classes visuais
+                        updateTimelineClass(); 
                         
-                        // Atualizar Botões de Filtro
                         document.querySelectorAll('.btn-filter').forEach(btn => {
-                            btn.classList.remove('active');
-                            const onclickAttr = btn.getAttribute('onclick');
-                            // Verifica se o onclick do botão corresponde ao filtro salvo
-                            if (onclickAttr && onclickAttr.includes(`'${currentFilter}'`)) {
-                                btn.classList.add('active');
+                            if(btn.id === 'btnFilterStar') {
+                                // Atualiza o botão de estrela separadamente
+                                btn.classList.toggle('active', isStarredFilter);
+                            } else {
+                                btn.classList.remove('active');
+                                const onclickAttr = btn.getAttribute('onclick');
+                                if (onclickAttr && onclickAttr.includes(`'${currentFilter}'`)) {
+                                    btn.classList.add('active');
+                                }
                             }
                         });
                         
-                        // Atualizar Botão de Ordenação
                         const sortBtn = document.querySelector('.btn-sort');
                         if (sortBtn) {
                             sortBtn.innerText = sortOrder === 'asc' ? '📅 Antigos ⬇️' : '📅 Recentes ⬆️';
                         }
+                    }
+
+                    // Restaurar Título
+                    if(pd.meta?.title) {
+                        document.getElementById('appTitle').innerText = pd.meta.title;
+                        localStorage.setItem(STORAGE_KEY_TITLE, pd.meta.title);
                     }
 
                     saveMainDataToStorage(fullData, { subtitle: pd.meta?.subtitle });
@@ -792,6 +867,10 @@
             // Carregar Favoritos
             const savedStars = localStorage.getItem(STORAGE_KEY_STARRED);
             if(savedStars) starredWOs = new Set(JSON.parse(savedStars));
+
+            // Carregar Título Personalizado
+            const savedTitle = localStorage.getItem(STORAGE_KEY_TITLE);
+            if(savedTitle) document.getElementById('appTitle').innerText = savedTitle;
 
             if (savedData) {
                 fullData = JSON.parse(savedData);
@@ -869,8 +948,19 @@
         // --- Filtros ---
         function setFilter(type, btn) {
             currentFilter = type;
-            document.querySelectorAll('.btn-filter').forEach(b => { if(!b.classList.contains('btn-sort')) b.classList.remove('active'); });
+            document.querySelectorAll('.btn-filter').forEach(b => { 
+                if(!b.classList.contains('btn-sort') && !b.classList.contains('btn-filter-star')) {
+                    b.classList.remove('active'); 
+                }
+            });
             btn.classList.add('active');
+            applyFiltersAndRender();
+        }
+
+        // Nova função para toggle de Favoritos (Independente)
+        function toggleStarredFilter(btn) {
+            isStarredFilter = !isStarredFilter;
+            btn.classList.toggle('active', isStarredFilter);
             applyFiltersAndRender();
         }
 
@@ -909,11 +999,14 @@
 
         function applyFiltersAndRender() {
             filteredData = fullData.filter(item => {
+                // 1. Filtro por Código de Atividade (Se existir)
                 if (currentActivityFilter && item.activityCode !== currentActivityFilter) return false;
                 
-                // Filtro de Favoritos
-                if (currentFilter === 'starred') return starredWOs.has(item.wo);
+                // 2. Filtro de Favoritos (Toggle - Lógica E)
+                // Se o filtro de estrelas estiver ATIVO, e o item NÃO tiver estrela, esconde ele.
+                if (isStarredFilter && !starredWOs.has(item.wo)) return false;
 
+                // 3. Filtro de Tipo (All, Preventiva, Corretiva)
                 if (currentFilter === 'all') return true;
                 const cause = (item.cause || "").toUpperCase();
                 if (currentFilter === 'preventiva') return cause.includes('PREVENTIV');
