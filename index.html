@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cronograma de Manutenção</title>
+    <!-- Biblioteca SheetJS -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #64748b;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --preventive-bg: #eff6ff;
+            --preventive-border: #3b82f6;
+            --corrective-bg: #ffffff;
+            --corrective-border: #94a3b8;
+            --text-color: #1e293b;
+            --danger-color: #ef4444;
+            --success-color: #16a34a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 10px;
+        }
+
+        /* --- Header --- */
+        header {
+            background: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .header-title h1 {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            margin: 0;
+        }
+        
+        .header-title p {
+            font-size: 0.8rem;
+            color: var(--secondary-color);
+            margin: 0;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        input[type="file"] { display: none; }
+
+        .btn-action {
+            border: 1px solid #ccc;
+            padding: 6px 12px;
+            cursor: pointer;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.2s;
+            background: white;
+            color: var(--text-color);
+        }
+
+        .btn-upload {
+            background-color: var(--bg-color);
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-export {
+            background-color: var(--success-color);
+            color: white;
+            border-color: var(--success-color);
+        }
+        .btn-export:hover { background-color: #15803d; }
+
+        .btn-import {
+            background-color: #f59e0b;
+            color: white;
+            border-color: #f59e0b;
+        }
+        .btn-import:hover { background-color: #d97706; }
+
+        .btn-clear {
+            color: var(--danger-color);
+            border-color: #fca5a5;
+        }
+        .btn-clear:hover { background-color: #fef2f2; }
+
+        /* --- Alertas --- */
+        .pending-alert {
+            background-color: #fff7ed;
+            color: #c2410c;
+            padding: 5px 10px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+            border: 1px solid #fed7aa;
+            display: none;
+            text-align: center;
+        }
+
+        /* --- Controles de Filtro --- */
+        .controls-wrapper {
+            position: sticky;
+            top: 5px;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .controls-bar {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            background: rgba(248, 250, 252, 0.95);
+            padding: 8px 15px;
+            border-radius: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            width: fit-content;
+        }
+
+        /* Filtro Ativo (Chip) */
+        .active-filter-chip {
+            display: none; /* Escondido por padrão */
+            align-items: center;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .active-filter-chip button {
+            background: none;
+            border: none;
+            color: white;
+            margin-left: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        .active-filter-chip button:hover { color: #cbd5e1; }
+
+        .btn-filter {
+            padding: 6px 14px;
+            border: 1px solid transparent;
+            background: transparent;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        .btn-filter:hover { background: #e2e8f0; }
+        .btn-filter.active {
+            background: white;
+            color: var(--primary-color);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .btn-sort { color: var(--text-color); }
+
+        /* --- Timeline --- */
+        .timeline {
+            position: relative;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding-top: 10px;
+        }
+
+        .timeline::after {
+            content: '';
+            position: absolute;
+            width: 2px;
+            background-color: #cbd5e1;
+            top: 0; bottom: 0; left: 50%;
+            margin-left: -1px;
+        }
+
+        .time-separator {
+            text-align: center;
+            position: relative;
+            z-index: 10;
+            margin: 20px 0;
+            clear: both;
+        }
+
+        .time-badge {
+            background-color: #94a3b8;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .container {
+            padding: 0 30px 20px 30px;
+            position: relative;
+            width: 50%;
+            cursor: pointer;
+        }
+
+        .container::after {
+            content: '';
+            position: absolute;
+            width: 12px; height: 12px;
+            right: -6px;
+            background-color: white;
+            border: 3px solid var(--primary-color);
+            top: 20px;
+            border-radius: 50%;
+            z-index: 1;
+            transition: transform 0.2s;
+        }
+
+        .container:hover::after { transform: scale(1.3); }
+        .left { left: 0; text-align: right; }
+        .right { left: 50%; text-align: left; }
+        .right::after { left: -6px; }
+
+        .content {
+            padding: 15px;
+            position: relative;
+            border-radius: 8px;
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: transform 0.2s;
+            text-align: left;
+            border-left: 4px solid transparent;
+        }
+
+        .content:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+
+        .content.preventiva { background-color: var(--preventive-bg); border-left-color: var(--preventive-border); }
+        .content.corretiva { background-color: var(--corrective-bg); border-left-color: var(--corrective-border); }
+        .content.outros { border-left-color: #f59e0b; }
+
+        .date-badge {
+            background-color: #f1f5f9;
+            color: var(--secondary-color);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 5px;
+        }
+
+        .wo-title {
+            font-size: 0.8rem;
+            color: var(--secondary-color);
+            font-weight: bold;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .wo-desc {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-color);
+            line-height: 1.3;
+            margin-bottom: 8px;
+        }
+
+        .wo-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-top: 8px;
+        }
+        
+        .left .wo-meta { justify-content: flex-end; }
+        .right .wo-meta { justify-content: flex-start; }
+
+        .tag {
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: white;
+            font-size: 0.7rem;
+            border: 1px solid #e2e8f0;
+            color: var(--secondary-color);
+        }
+
+        .tag-activity { 
+            color: white; 
+            border: none; 
+            cursor: zoom-in; /* Ícone de lupa */
+            transition: transform 0.1s;
+        }
+        .tag-activity:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        /* --- Modal --- */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center; align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-window {
+            background: white; width: 90%; max-width: 700px; height: 70vh;
+            border-radius: 10px; padding: 20px; display: flex; flex-direction: column;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .modal-header { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+        .detail-textarea { flex-grow: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; resize: none; font-size: 1rem; }
+        .modal-footer { margin-top: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .save-btn { background-color: var(--primary-color); color: white; border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer; }
+        .close-modal { border: none; background: none; font-size: 1.5rem; cursor: pointer; color: #64748b; }
+
+        @media screen and (max-width: 600px) {
+            header { flex-direction: column; text-align: center; }
+            .timeline::after { left: 20px; }
+            .container { width: 100%; padding-left: 45px; padding-right: 10px; text-align: left; }
+            .left, .right { left: 0; }
+            .left .wo-meta, .right .wo-meta { justify-content: flex-start; }
+            .container::after { left: 14px; }
+            .controls-bar { width: 100%; overflow-x: auto; justify-content: flex-start; }
+            .header-actions { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-title">
+            <h1>Gestão de Manutenção</h1>
+            <p id="reportDateSubtitle">Timeline Interativa</p>
+        </div>
+        
+        <div class="header-actions">
+            <!-- Upload Excel -->
+            <label class="btn-action btn-upload" title="Carregar do Excel">
+                <input type="file" id="excelFile" accept=".xlsx, .xls" />
+                📄 Excel
+            </label>
+
+            <!-- Exportar Projeto -->
+            <button class="btn-action btn-export" onclick="exportProject()" title="Baixar Projeto (com notas)">
+                💾 Salvar Projeto
+            </button>
+
+            <!-- Importar Projeto -->
+            <label class="btn-action btn-import" title="Abrir Projeto Salvo">
+                <input type="file" id="importFile" accept=".json" onchange="importProject(this)" />
+                📂 Abrir Projeto
+            </label>
+            
+            <button class="btn-action btn-clear" onclick="clearAllData()" title="Limpar Tudo">
+                🗑️
+            </button>
+        </div>
+    </header>
+
+    <div id="pendingAlert" class="pending-alert"></div>
+
+    <div class="controls-wrapper">
+        <!-- Chip de Filtro Ativo -->
+        <div id="activeActivityFilter" class="active-filter-chip">
+            <span id="activeFilterText">Atividade: XYZ</span>
+            <button onclick="clearActivityFilter()">×</button>
+        </div>
+
+        <div class="controls-bar">
+            <button class="btn-filter active" onclick="setFilter('all', this)">Todas</button>
+            <button class="btn-filter" onclick="setFilter('preventiva', this)">Preventivas</button>
+            <button class="btn-filter" onclick="setFilter('corretiva', this)">Corretivas</button>
+            <span style="border-left: 1px solid #ccc; margin: 0 5px;"></span>
+            <button class="btn-filter btn-sort" onclick="toggleSort(this)">📅 Antigos ⬇️</button>
+        </div>
+    </div>
+
+    <div class="timeline" id="timelineList">
+        <!-- JS Preenche aqui -->
+    </div>
+
+    <!-- Modal Detalhamento -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-window">
+            <div class="modal-header">
+                <div>
+                    <h3 id="modalWoTitle" style="color: var(--primary-color)">WO</h3>
+                    <small id="modalActivityInfo" style="color: #64748b;"></small>
+                </div>
+                <button class="close-modal" onclick="closeModal()">&times;</button>
+            </div>
+            <textarea id="detailText" class="detail-textarea" placeholder="Digite o detalhamento técnico, passo a passo ou observações..."></textarea>
+            <div class="modal-footer">
+                <span id="saveStatus" style="color: green; font-size:0.9rem; opacity: 0; transition: opacity 0.5s;">Salvo!</span>
+                <button class="save-btn" onclick="saveDetails()">Salvar Alterações</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let fullData = []; 
+        let filteredData = []; 
+        let pendingCount = 0; 
+        
+        let currentFilter = 'all';
+        let sortOrder = 'asc'; 
+        let currentActivityFilter = null; // Filtro específico de atividade
+        
+        let currentEditingId = null;
+        let currentActivityCode = null;
+
+        const STORAGE_KEY_DATA = 'timeline_main_data';
+        const STORAGE_KEY_META = 'timeline_meta_info';
+
+        const COLS = {
+            REPORT_DATE: 0, WO: 4, DESC: 5, EXEC_DATE: 9, ACT_CODE: 11, ASSET: 13, CAUSE: 27
+        };
+
+        window.onload = function() { loadSavedData(); }
+
+        // --- Gerador de Cores ---
+        function stringToColor(str) {
+            if(!str) return '#cbd5e1';
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+            const c = (hash & 0x00FFFFFF).toString(16).toUpperCase();
+            return '#' + "00000".substring(0, 6 - c.length) + c;
+        }
+
+        // --- Exportação e Importação de Projeto (JSON) ---
+        function exportProject() {
+            if(fullData.length === 0) {
+                alert("Não há dados para exportar.");
+                return;
+            }
+
+            // Coleta todas as notas salvas no localStorage que começam com 'annex_'
+            const notes = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('annex_')) {
+                    notes[key] = localStorage.getItem(key);
+                }
+            }
+
+            const projectData = {
+                timestamp: new Date().toISOString(),
+                data: fullData,
+                notes: notes,
+                meta: {
+                    subtitle: document.getElementById('reportDateSubtitle').innerText
+                }
+            };
+
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "cronograma_manutencao.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        }
+
+        function importProject(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const projectData = JSON.parse(e.target.result);
+                    
+                    if(!projectData.data || !projectData.notes) {
+                        throw new Error("Formato de arquivo inválido");
+                    }
+
+                    // Restaura dados
+                    fullData = projectData.data;
+                    // Corrige datas
+                    fullData.forEach(item => item.rawDate = new Date(item.rawDate));
+
+                    // Restaura notas no localStorage
+                    Object.keys(projectData.notes).forEach(key => {
+                        localStorage.setItem(key, projectData.notes[key]);
+                    });
+
+                    // Salva estado principal
+                    saveMainDataToStorage(fullData, { subtitle: projectData.meta?.subtitle });
+                    
+                    document.getElementById('reportDateSubtitle').innerText = projectData.meta?.subtitle || "Projeto Importado";
+                    
+                    // Renderiza
+                    applyFiltersAndRender();
+                    alert("Projeto importado com sucesso!");
+
+                } catch (err) {
+                    console.error(err);
+                    alert("Erro ao importar arquivo. Verifique se é um JSON válido gerado por este sistema.");
+                }
+                input.value = ''; // Limpa input
+            };
+            reader.readAsText(file);
+        }
+
+        // --- Persistência Local ---
+        function saveMainDataToStorage(dataRows, metaInfo) {
+            try {
+                localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(dataRows));
+                if(metaInfo) localStorage.setItem(STORAGE_KEY_META, JSON.stringify(metaInfo));
+            } catch (e) {
+                console.error(e);
+                alert("Atenção: Espaço local cheio. Alguns dados podem não persistir ao fechar a aba.");
+            }
+        }
+
+        function loadSavedData() {
+            const savedData = localStorage.getItem(STORAGE_KEY_DATA);
+            const savedMeta = localStorage.getItem(STORAGE_KEY_META);
+
+            if (savedData) {
+                fullData = JSON.parse(savedData);
+                fullData.forEach(item => item.rawDate = new Date(item.rawDate));
+
+                if(savedMeta) {
+                    const meta = JSON.parse(savedMeta);
+                    document.getElementById('reportDateSubtitle').innerText = meta.subtitle || "Dados recuperados";
+                }
+                applyFiltersAndRender();
+            } else {
+                document.getElementById('timelineList').innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;">Nenhum dado salvo. Carregue um Excel ou Importe um Projeto.</div>';
+            }
+        }
+
+        function clearAllData() {
+            if(confirm("Tem certeza? Isso apagará TUDO (Excel e Notas locais). Salve o projeto antes se quiser guardar.")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        // --- Excel Handler ---
+        document.getElementById('excelFile').addEventListener('change', handleFile);
+
+        function handleFile(e) {
+            const file = e.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array', cellDates: true});
+                let targetSheet = "ReportOutput";
+                if (!workbook.Sheets[targetSheet]) targetSheet = workbook.SheetNames[1] || workbook.SheetNames[0];
+                const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[targetSheet], {header: 1, defval: '', blankrows: false});
+                processExcelData(jsonData);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function formatDate(dateVal) {
+            if (!dateVal) return "";
+            if (dateVal instanceof Date) return dateVal.toLocaleDateString('pt-BR');
+            return String(dateVal);
+        }
+
+        function processExcelData(rows) {
+            const dataRows = rows.slice(1);
+            fullData = [];
+            pendingCount = 0;
+            let reportSubtitle = "Relatório carregado";
+
+            if(dataRows.length > 0 && dataRows[0][COLS.REPORT_DATE]) {
+                reportSubtitle = `Relatório gerado em: ${formatDate(dataRows[0][COLS.REPORT_DATE])}`;
+                document.getElementById('reportDateSubtitle').innerText = reportSubtitle;
+            }
+
+            dataRows.forEach(row => {
+                const wo = row[COLS.WO];
+                const execDate = row[COLS.EXEC_DATE];
+                if (!wo || wo === "S/N") return; 
+                if (!execDate) { pendingCount++; return; }
+
+                fullData.push({
+                    wo: wo,
+                    desc: row[COLS.DESC] || "Sem descrição",
+                    date: formatDate(execDate),
+                    rawDate: execDate instanceof Date ? execDate : new Date(0),
+                    activityCode: row[COLS.ACT_CODE] ? String(row[COLS.ACT_CODE]).trim() : "",
+                    asset: row[COLS.ASSET] || "",
+                    cause: row[COLS.CAUSE] || "OUTROS"
+                });
+            });
+
+            saveMainDataToStorage(fullData, { subtitle: reportSubtitle });
+            checkPendingAlert(pendingCount);
+            applyFiltersAndRender();
+        }
+
+        function checkPendingAlert(count) {
+            const alertEl = document.getElementById('pendingAlert');
+            if (count > 0) {
+                alertEl.style.display = 'block';
+                alertEl.innerText = `⚠️ ${count} atividades sem Data de Execução foram ocultadas.`;
+            } else {
+                alertEl.style.display = 'none';
+            }
+        }
+
+        // --- Lógica de Filtros ---
+        function setFilter(type, btn) {
+            currentFilter = type;
+            document.querySelectorAll('.btn-filter').forEach(b => {
+                if(!b.classList.contains('btn-sort')) b.classList.remove('active');
+            });
+            btn.classList.add('active');
+            applyFiltersAndRender();
+        }
+
+        function toggleSort(btn) {
+            sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
+            btn.innerText = sortOrder === 'asc' ? '📅 Antigos ⬇️' : '📅 Recentes ⬆️';
+            applyFiltersAndRender();
+        }
+
+        // Filtra por uma atividade específica ao clicar no código
+        function filterByActivity(code) {
+            currentActivityFilter = code;
+            document.getElementById('activeActivityFilter').style.display = 'flex';
+            document.getElementById('activeFilterText').innerText = `Atividade: ${code}`;
+            applyFiltersAndRender();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function clearActivityFilter() {
+            currentActivityFilter = null;
+            document.getElementById('activeActivityFilter').style.display = 'none';
+            applyFiltersAndRender();
+        }
+
+        function applyFiltersAndRender() {
+            filteredData = fullData.filter(item => {
+                // 1. Filtro de Atividade Específica (Prioritário)
+                if (currentActivityFilter && item.activityCode !== currentActivityFilter) {
+                    return false;
+                }
+
+                // 2. Filtro de Tipo (Preventiva/Corretiva)
+                if (currentFilter === 'all') return true;
+                const cause = (item.cause || "").toUpperCase();
+                if (currentFilter === 'preventiva') return cause.includes('PREVENTIV');
+                if (currentFilter === 'corretiva') return cause.includes('CORRECT') || cause.includes('CORRETIVA');
+                return false;
+            });
+
+            filteredData.sort((a, b) => {
+                return sortOrder === 'asc' 
+                    ? new Date(a.rawDate) - new Date(b.rawDate) 
+                    : new Date(b.rawDate) - new Date(a.rawDate);
+            });
+
+            renderTimeline(filteredData);
+        }
+
+        function getStyleClass(cause) {
+            const c = (cause || "").toUpperCase();
+            if(c.includes("PREVENTIV")) return "preventiva";
+            if(c.includes("CORRECT") || c.includes("CORRETIVA")) return "corretiva";
+            return "outros";
+        }
+
+        function renderTimeline(data) {
+            const container = document.getElementById('timelineList');
+            container.innerHTML = '';
+            
+            if(data.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">Nenhuma atividade encontrada com estes filtros.</div>';
+                return;
+            }
+
+            let lastMonthYear = "";
+
+            data.forEach((item, index) => {
+                const itemDate = new Date(item.rawDate);
+                const currentMonthYear = itemDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+                
+                if (currentMonthYear !== lastMonthYear) {
+                    const separator = document.createElement('div');
+                    separator.className = 'time-separator';
+                    separator.innerHTML = `<span class="time-badge">${currentMonthYear.toUpperCase()}</span>`;
+                    container.appendChild(separator);
+                    lastMonthYear = currentMonthYear;
+                }
+
+                const side = index % 2 === 0 ? 'left' : 'right';
+                const styleClass = getStyleClass(item.cause);
+                const activityColor = stringToColor(item.activityCode);
+                const safeDesc = item.desc.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                
+                const div = document.createElement('div');
+                div.className = `container ${side}`;
+                
+                div.innerHTML = `
+                    <div class="content ${styleClass}" onclick="openModal('${item.wo}', '${item.activityCode}', '${safeDesc}')">
+                        <span class="date-badge">${item.date}</span>
+                        <span class="wo-title">WO: ${item.wo}</span>
+                        <div class="wo-desc">${item.desc}</div>
+                        <div class="wo-meta">
+                            ${item.asset ? `<span class="tag">🏭 ${item.asset}</span>` : ''}
+                            ${item.activityCode ? 
+                                `<button class="tag tag-activity" 
+                                    style="background-color: ${activityColor};" 
+                                    title="Clique para filtrar apenas esta atividade"
+                                    onclick="event.stopPropagation(); filterByActivity('${item.activityCode}')">
+                                    Cód: ${item.activityCode}
+                                 </button>` 
+                                : ''}
+                            <span class="tag">${item.cause}</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // --- Modal ---
+        function openModal(wo, actCode, desc) {
+            const modal = document.getElementById('detailModal');
+            currentEditingId = wo;
+            currentActivityCode = actCode === "undefined" || actCode === "" ? null : actCode;
+
+            document.getElementById('modalWoTitle').innerText = `WO: ${wo}`;
+            const infoEl = document.getElementById('modalActivityInfo');
+            
+            if (currentActivityCode) {
+                infoEl.innerHTML = `Vínculo: Código de Atividade <b>${currentActivityCode}</b>`;
+            } else {
+                infoEl.innerHTML = `Vínculo: Exclusivo desta WO`;
+            }
+
+            const key = currentActivityCode ? `annex_act_${currentActivityCode}` : `annex_wo_${wo}`;
+            document.getElementById('detailText').value = localStorage.getItem(key) || "";
+            document.getElementById('saveStatus').style.opacity = '0';
+
+            modal.classList.add('active');
+        }
+
+        function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
+
+        function saveDetails() {
+            const text = document.getElementById('detailText').value;
+            const key = currentActivityCode ? `annex_act_${currentActivityCode}` : `annex_wo_${currentEditingId}`;
+            localStorage.setItem(key, text);
+            const status = document.getElementById('saveStatus');
+            status.style.opacity = '1';
+            setTimeout(() => status.style.opacity = '0', 2000);
+        }
+
+        document.getElementById('detailModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+    </script>
+</body>
+</html>
