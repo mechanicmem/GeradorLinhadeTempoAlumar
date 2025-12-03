@@ -21,6 +21,8 @@
             --danger-color: #ef4444;
             --success-color: #16a34a;
             --ruler-color: #cbd5e1;
+            /* Escala: 40px visualmente representa 1 dia */
+            --pixels-per-day: 40px; 
         }
 
         * {
@@ -109,6 +111,7 @@
         .btn-clear {
             color: var(--danger-color);
             border-color: #fca5a5;
+            background: #fff;
         }
         .btn-clear:hover { background-color: #fef2f2; }
 
@@ -125,7 +128,7 @@
             text-align: center;
         }
 
-        /* --- Controles de Filtro --- */
+        /* --- Controles --- */
         .controls-wrapper {
             position: sticky;
             top: 5px;
@@ -149,7 +152,6 @@
             justify-content: center;
         }
 
-        /* Toggles */
         .toggle-label {
             display: flex;
             align-items: center;
@@ -162,11 +164,7 @@
             margin-right: 5px;
             cursor: pointer;
         }
-        
-        /* Remove border from last toggle */
-        .toggle-label:nth-last-child(4) { /* Ajuste baseado na ordem dos botões */
-             border-right: 1px solid #cbd5e1;
-        }
+        .toggle-label:nth-last-child(4) { border-right: 1px solid #cbd5e1; }
 
         .switch {
             position: relative;
@@ -197,7 +195,6 @@
         input:checked + .slider { background-color: var(--primary-color); }
         input:checked + .slider:before { transform: translateX(16px); }
 
-        /* Filtro Ativo (Chip) */
         .active-filter-chip {
             display: none;
             align-items: center;
@@ -209,18 +206,8 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             animation: fadeIn 0.3s ease;
         }
-        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .active-filter-chip button {
-            background: none;
-            border: none;
-            color: white;
-            margin-left: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 1rem;
-        }
+        .active-filter-chip button { background: none; border: none; color: white; margin-left: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; }
         .active-filter-chip button:hover { color: #cbd5e1; }
 
         .btn-filter {
@@ -233,14 +220,8 @@
             color: var(--secondary-color);
             font-weight: 600;
         }
-
         .btn-filter:hover { background: #e2e8f0; }
-        .btn-filter.active {
-            background: white;
-            color: var(--primary-color);
-            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-        }
-
+        .btn-filter.active { background: white; color: var(--primary-color); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         .btn-sort { color: var(--text-color); }
 
         /* --- Timeline --- */
@@ -260,184 +241,127 @@
             top: 0; bottom: 0; left: 50%;
             margin-left: -1px;
             transition: all 0.3s ease;
+            z-index: 0;
         }
 
-        /* --- ESTILO PROPORCIONAL (Régua) --- */
-        .timeline.proportional::after {
-            width: 4px;
-            margin-left: -2px;
-            background-color: transparent;
-            /* Cria marcas de régua: linha solida a cada 20px */
-            background-image: linear-gradient(to bottom, var(--ruler-color) 50%, transparent 50%);
-            background-size: 2px 20px; /* 10px linha, 10px espaço? ajustado para parecer ticks */
-            background-repeat: repeat-y;
+        /* --- ESTILOS DE GAP (NOVO) --- */
+        .timeline-gap {
+            position: relative;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+            /* A altura é definida inline via JS */
         }
         
-        /* Fundo discreto para dias na timeline inteira (Opcional, mas pedido) */
+        /* Máscara branca para cobrir a linha sólida no centro */
+        .timeline-gap::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 10px; /* Largura suficiente para cobrir a linha */
+            margin-left: -5px;
+            background-color: var(--bg-color); /* Mesma cor do fundo */
+            z-index: 1;
+        }
+
+        /* Linha tracejada visual */
+        .timeline-gap::after {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            margin-left: -1px;
+            border-left: 2px dashed #cbd5e1;
+            z-index: 2;
+        }
+
+        .gap-label {
+            background-color: #f1f5f9;
+            color: #94a3b8;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border: 1px solid #e2e8f0;
+            z-index: 10;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        /* --- Fim Estilos Gap --- */
+
+        .timeline.proportional::after {
+            width: 4px; margin-left: -2px; background-color: transparent;
+            background-image: linear-gradient(to bottom, var(--ruler-color) 2px, transparent 2px);
+            background-size: 100% var(--pixels-per-day); background-repeat: repeat-y;
+        }
+        
         .timeline.proportional {
-            /* Linhas horizontais discretas no fundo */
             background-image: linear-gradient(#e2e8f0 1px, transparent 1px);
-            background-size: 100% 20px; /* 20px = 1 dia na escala padrão */
+            background-size: 100% var(--pixels-per-day);
         }
 
         .time-separator {
-            text-align: center;
-            position: relative;
-            z-index: 10;
-            margin: 20px 0;
-            clear: both;
+            text-align: center; position: relative; z-index: 10; margin: 20px 0; clear: both;
         }
-
         .time-badge {
-            background-color: #94a3b8;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: bold;
+            background-color: #94a3b8; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold;
         }
 
         .container {
-            padding: 0 30px 20px 30px;
-            position: relative;
-            width: 50%;
-            cursor: pointer;
-            transition: all 0.3s ease;
+            padding: 0 30px 20px 30px; position: relative; width: 50%; cursor: pointer; transition: all 0.3s ease;
         }
-
         .container::after {
-            content: '';
-            position: absolute;
-            width: 12px; height: 12px;
-            right: -6px;
-            background-color: white;
-            border: 3px solid var(--primary-color);
-            top: 20px;
-            border-radius: 50%;
-            z-index: 1;
-            transition: transform 0.2s;
+            content: ''; position: absolute; width: 12px; height: 12px; right: -6px; background-color: white; border: 3px solid var(--primary-color); top: 20px; border-radius: 50%; z-index: 1; transition: transform 0.2s;
         }
-
         .container:hover::after { transform: scale(1.3); }
         .left { left: 0; text-align: right; }
         .right { left: 50%; text-align: left; }
         .right::after { left: -6px; }
 
         .content {
-            padding: 15px;
-            position: relative;
-            border-radius: 8px;
-            background: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            transition: transform 0.2s;
-            text-align: left;
-            border-left: 4px solid transparent;
+            padding: 15px; position: relative; border-radius: 8px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.2s; text-align: left; border-left: 4px solid transparent;
         }
-
         .content:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-
         .content.preventiva { background-color: var(--preventive-bg); border-left-color: var(--preventive-border); }
         .content.corretiva { background-color: var(--corrective-bg); border-left-color: var(--corrective-border); }
         .content.outros { border-left-color: #f59e0b; }
 
         .date-badge {
-            background-color: #f1f5f9;
-            color: var(--secondary-color);
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            display: inline-block;
-            margin-bottom: 5px;
+            background-color: #f1f5f9; color: var(--secondary-color); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: inline-block; margin-bottom: 5px;
         }
-
-        .wo-title {
-            font-size: 0.8rem;
-            color: var(--secondary-color);
-            font-weight: bold;
-            display: block;
-            margin-bottom: 2px;
-        }
-
-        .wo-desc {
-            font-size: 0.95rem;
-            font-weight: 600;
-            color: var(--text-color);
-            line-height: 1.3;
-            margin-bottom: 8px;
-        }
-
-        .wo-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            margin-top: 8px;
-        }
-        
+        .wo-title { font-size: 0.8rem; color: var(--secondary-color); font-weight: bold; display: block; margin-bottom: 2px; }
+        .wo-desc { font-size: 0.95rem; font-weight: 600; color: var(--text-color); line-height: 1.3; margin-bottom: 8px; }
+        .wo-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
         .left .wo-meta { justify-content: flex-end; }
         .right .wo-meta { justify-content: flex-start; }
+        .tag { padding: 2px 6px; border-radius: 4px; background: white; font-size: 0.7rem; border: 1px solid #e2e8f0; color: var(--secondary-color); }
+        .tag-activity { color: white; border: none; cursor: zoom-in; transition: transform 0.1s; }
+        .tag-activity:hover { transform: scale(1.05); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 
-        .tag {
-            padding: 2px 6px;
-            border-radius: 4px;
-            background: white;
-            font-size: 0.7rem;
-            border: 1px solid #e2e8f0;
-            color: var(--secondary-color);
-        }
-
-        .tag-activity { 
-            color: white; 
-            border: none; 
-            cursor: zoom-in; /* Ícone de lupa */
-            transition: transform 0.1s;
-        }
-        .tag-activity:hover {
-            transform: scale(1.05);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
-        /* --- MODO COMPACTO --- */
+        /* Compact Mode */
         .timeline.compact .time-separator { margin: 10px 0; }
         .timeline.compact .time-badge { padding: 2px 8px; font-size: 0.7rem; }
         .timeline.compact .container { padding-bottom: 8px; }
         .timeline.compact .container::after { top: 12px; width: 10px; height: 10px; right: -5px; border-width: 2px; }
         .timeline.compact .right::after { left: -5px; }
         .timeline.compact .content { padding: 8px 12px; }
-        .timeline.compact .wo-desc {
-            font-size: 0.85rem;
-            white-space: nowrap; 
-            overflow: hidden; 
-            text-overflow: ellipsis;
-            margin-bottom: 4px;
-            line-height: 1.2;
-        }
+        .timeline.compact .wo-desc { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; line-height: 1.2; }
         .timeline.compact .wo-meta { margin-top: 4px; gap: 3px; }
         .timeline.compact .tag { padding: 1px 4px; font-size: 0.65rem; }
-        .timeline.compact .wo-header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 2px;
-        }
+        .timeline.compact .wo-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
         .timeline.compact .date-badge { margin-bottom: 0; font-size: 0.7rem; padding: 1px 6px; }
         .timeline.compact .wo-title { margin-bottom: 0; font-size: 0.75rem; }
 
-        /* --- Modal --- */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            justify-content: center; align-items: center;
-        }
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center; }
         .modal-overlay.active { display: flex; }
-        .modal-window {
-            background: white; width: 90%; max-width: 700px; height: 70vh;
-            border-radius: 10px; padding: 20px; display: flex; flex-direction: column;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
-        }
+        .modal-window { background: white; width: 90%; max-width: 700px; height: 70vh; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
         .modal-header { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
         .detail-textarea { flex-grow: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; resize: none; font-size: 1rem; }
         .modal-footer { margin-top: 15px; display: flex; justify-content: space-between; align-items: center; }
@@ -447,7 +371,9 @@
         @media screen and (max-width: 600px) {
             header { flex-direction: column; text-align: center; }
             .timeline::after { left: 20px; }
-            .timeline.proportional::after { left: 20px; margin-left: -1px; } /* Ajuste régua mobile */
+            .timeline.proportional::after { left: 20px; margin-left: -1px; }
+            .timeline-gap::before { left: 20px; } /* Ajuste gap mobile */
+            .timeline-gap::after { left: 20px; } /* Ajuste gap mobile */
             .container { width: 100%; padding-left: 45px; padding-right: 10px; text-align: left; }
             .left, .right { left: 0; }
             .left .wo-meta, .right .wo-meta { justify-content: flex-start; }
@@ -490,7 +416,6 @@
         </div>
 
         <div class="controls-row">
-            <!-- Toggle: Compacto -->
             <div class="toggle-label">
                 Compacto
                 <label class="switch">
@@ -498,8 +423,6 @@
                     <span class="slider"></span>
                 </label>
             </div>
-
-            <!-- Toggle: Proporcional -->
             <div class="toggle-label">
                 Espaço Proporcional
                 <label class="switch">
@@ -507,7 +430,6 @@
                     <span class="slider"></span>
                 </label>
             </div>
-
             <button class="btn-filter active" onclick="setFilter('all', this)">Todas</button>
             <button class="btn-filter" onclick="setFilter('preventiva', this)">Preventivas</button>
             <button class="btn-filter" onclick="setFilter('corretiva', this)">Corretivas</button>
@@ -547,14 +469,14 @@
         let sortOrder = 'asc'; 
         let currentActivityFilter = null;
         let isCompact = false; 
-        let isProportional = false; // Novo Estado
+        let isProportional = false; 
         
         let currentEditingId = null;
         let currentActivityCode = null;
 
         const STORAGE_KEY_DATA = 'timeline_main_data';
         const STORAGE_KEY_META = 'timeline_meta_info';
-        const PIXELS_PER_DAY = 20; // Escala do modo proporcional
+        const PIXELS_PER_DAY = 40; 
 
         const COLS = {
             REPORT_DATE: 0, WO: 4, DESC: 5, EXEC_DATE: 9, ACT_CODE: 11, ASSET: 13, CAUSE: 27
@@ -562,7 +484,6 @@
 
         window.onload = function() { loadSavedData(); }
 
-        // --- Toggles ---
         function toggleCompactMode() {
             const toggle = document.getElementById('compactModeSwitch');
             isCompact = toggle.checked;
@@ -573,7 +494,7 @@
             const toggle = document.getElementById('proportionalModeSwitch');
             isProportional = toggle.checked;
             updateTimelineClass();
-            renderTimeline(filteredData); // Re-renderizar para calcular margens
+            renderTimeline(filteredData);
         }
 
         function updateTimelineClass() {
@@ -582,7 +503,6 @@
             timeline.classList.toggle('proportional', isProportional);
         }
 
-        // --- Utils ---
         function stringToColor(str) {
             if(!str) return '#cbd5e1';
             let hash = 0;
@@ -592,11 +512,13 @@
         }
 
         function getDaysDiff(date1, date2) {
+            const d1 = new Date(date1); d1.setHours(0,0,0,0);
+            const d2 = new Date(date2); d2.setHours(0,0,0,0);
             const oneDay = 24 * 60 * 60 * 1000; 
-            return Math.round(Math.abs((date1 - date2) / oneDay));
+            return Math.round(Math.abs((d1 - d2) / oneDay));
         }
 
-        // --- Export/Import/Persistence/Excel (Mantidos iguais) ---
+        // --- Export/Import/Persistence/Excel ---
         function exportProject() {
             if(fullData.length === 0) { alert("Não há dados."); return; }
             const notes = {};
@@ -612,8 +534,7 @@
             };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData));
             const a = document.createElement('a');
-            a.href = dataStr;
-            a.download = "cronograma_manutencao.json";
+            a.href = dataStr; a.download = "cronograma_manutencao.json";
             document.body.appendChild(a); a.click(); a.remove();
         }
 
@@ -772,7 +693,7 @@
             return "outros";
         }
 
-        // --- RENDERIZADOR PRINCIPAL ---
+        // --- RENDERIZADOR ---
         function renderTimeline(data) {
             const container = document.getElementById('timelineList');
             container.innerHTML = '';
@@ -789,29 +710,41 @@
                 const itemDate = new Date(item.rawDate);
                 const currentMonthYear = itemDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
                 
-                // Separador de Mês (Sempre mostrado, a menos que seja o mesmo)
                 if (currentMonthYear !== lastMonthYear) {
                     const separator = document.createElement('div');
                     separator.className = 'time-separator';
                     separator.innerHTML = `<span class="time-badge">${currentMonthYear.toUpperCase()}</span>`;
-                    
-                    // Se estiver no modo proporcional, e mudou de mês, talvez dar um espaço extra?
-                    // Deixaremos natural por enquanto, pois a data real já define o espaço.
-                    
                     container.appendChild(separator);
                     lastMonthYear = currentMonthYear;
                 }
 
-                // Cálculo de Espaçamento Proporcional
+                // Cálculo de Lacunas e Espaçamento
                 let marginTop = 0;
+                
                 if (isProportional && lastDate) {
-                    // Diferença em dias absoluto (para funcionar em ordenação invertida tambem)
                     const daysDiff = getDaysDiff(itemDate, lastDate);
                     
-                    // Se for mais de 60 dias, capar em 60 para não ficar gigante, mas mostrar que é longe
-                    const effectiveDays = Math.min(daysDiff, 60); 
-                    
-                    marginTop = effectiveDays * PIXELS_PER_DAY;
+                    // Se houver mais de 1 dia de diferença (significa pelo menos 1 dia inteiro vazio no meio)
+                    if (daysDiff > 1) {
+                        const gapDiv = document.createElement('div');
+                        gapDiv.className = 'timeline-gap';
+                        
+                        // Altura visual: Capamos em 60 dias para não quebrar a tela
+                        const effectiveGap = Math.min(daysDiff, 60); 
+                        gapDiv.style.height = `${effectiveGap * PIXELS_PER_DAY}px`;
+                        
+                        // Etiqueta
+                        const label = document.createElement('span');
+                        label.className = 'gap-label';
+                        label.innerText = `${daysDiff - 1} dia(s) sem atividade`;
+                        gapDiv.appendChild(label);
+                        
+                        container.appendChild(gapDiv);
+                    } else if (daysDiff === 1) {
+                         // Dias seguidos (ex: Segunda -> Terça), espaço normal (visual 1 dia)
+                         // Não faz nada especial, o css de margin já dá um respiro, ou podemos forçar
+                         marginTop = PIXELS_PER_DAY;
+                    }
                 }
 
                 const side = index % 2 === 0 ? 'left' : 'right';
@@ -822,8 +755,7 @@
                 const div = document.createElement('div');
                 div.className = `container ${side}`;
                 
-                // Aplicar margem dinâmica se proporcional
-                if (isProportional) {
+                if (isProportional && marginTop > 0) {
                     div.style.marginTop = `${marginTop}px`;
                 }
 
