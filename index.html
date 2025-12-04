@@ -3,6 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEGURANÇA: Content Security Policy (CSP) -->
+    <!-- Permite scripts apenas do próprio documento e das CDNs confiáveis listadas. Permite estilos inline (necessário para a UI atual). -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.sheetjs.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
+    
     <title>Cronograma de Manutenção</title>
     <!-- Biblioteca SheetJS -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
@@ -258,6 +263,23 @@
         .btn-filter-hide:hover { background-color: #e2e8f0; }
         .btn-filter-hide.active { background-color: #64748b; color: white; border-color: #475569; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 
+        /* Input para Níveis */
+        .level-control {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+        .level-input {
+            width: 50px;
+            padding: 4px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            text-align: center;
+        }
+
         /* --- Vertical Timeline (Default) --- */
         .timeline {
             position: relative;
@@ -363,11 +385,12 @@
         .tag-activity:hover { transform: scale(1.05); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         .wo-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
 
-        /* --- HORIZONTAL MODE STYLES (6 Níveis de Escalonamento & Espaçado) --- */
+        /* --- HORIZONTAL MODE STYLES REVISADO --- */
         .timeline-horizontal-container {
             overflow-x: auto;
             overflow-y: hidden;
-            padding: 350px 110px; /* Ajustado para 6 níveis */
+            /* Padding aumentado para acomodar níveis verticais dinâmicos */
+            padding: 300px 80px; 
             white-space: nowrap;
             position: relative;
             background-color: var(--bg-color);
@@ -380,116 +403,113 @@
         .timeline-horizontal-container.active { display: block; }
 
         .h-axis {
-            height: 6px;
+            /* Seta Grossa */
+            height: 50px;
             background: linear-gradient(to right, var(--primary-color), #22c55e);
-            width: max-content;
+            /* Min-width 100% garante que ocupe a tela mesmo com poucos itens.
+               Display Flex e space-evenly distribui os itens */
             min-width: 100%;
+            width: max-content; 
             position: relative;
-            border-radius: 3px;
+            border-radius: 4px;
             display: flex;
             align-items: center;
-            margin: 0 20px;
+            justify-content: space-evenly; /* Distribuição uniforme */
+            margin: 0 60px 0 20px; /* Margem direita maior para a seta */
         }
+        
+        /* Cabeça da Seta Ajustada */
         .h-axis::after {
-            content: ''; position: absolute; right: -10px; top: -7px;
-            width: 0; height: 0; 
-            border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-left: 15px solid #22c55e;
+            content: ''; 
+            position: absolute; 
+            right: -40px; /* Deslocado para fora */
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0; 
+            height: 0; 
+            border-top: 40px solid transparent; 
+            border-bottom: 40px solid transparent; 
+            border-left: 45px solid #22c55e;
         }
 
         /* Item Wrapper */
         .h-node {
             position: relative;
-            width: 50px; /* Espaçamento Horizontal Aumentado */
-            margin: 0; 
-            display: inline-block;
-            vertical-align: middle;
-            white-space: normal;
+            width: 2px; /* O nó é virtualmente sem largura na barra, o conteúdo flutua */
+            height: 100%; /* Altura da barra */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0; /* Impede encolhimento */
+            margin: 0 35px; /* Espaço mínimo garantido entre nós */
         }
 
+        /* Dot Maior e Centralizado Corretamente */
         .h-dot {
-            position: absolute; left: 50%; transform: translateX(-50%);
-            width: 12px; height: 12px;
-            background: white; border: 3px solid var(--primary-color); border-radius: 50%;
-            z-index: 2; cursor: pointer; transition: transform 0.2s;
+            position: absolute; 
+            /* Centralização perfeita em relação à linha de 50px */
+            top: 50%; 
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 24px; 
+            height: 24px;
+            /* Cor de fundo será definida via JS. Borda Branca. */
+            background: #ccc; 
+            border: 3px solid white; 
+            border-radius: 50%;
+            z-index: 10; 
+            cursor: pointer; 
+            transition: transform 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-        .h-dot:hover { transform: translateX(-50%) scale(1.3); }
+        .h-dot:hover { transform: translate(-50%, -50%) scale(1.3); }
 
         .h-connector {
-            position: absolute; left: 50%; width: 2px; background-color: #cbd5e1;
-            z-index: 1; transform: translateX(-1px);
+            position: absolute; 
+            left: 50%; 
+            width: 2px; 
+            background-color: #94a3b8;
+            z-index: 1; 
+            transform: translateX(-50%);
+            /* Height e Top/Bottom definidos via JS */
         }
 
-        /* === 6 NÍVEIS DE ESCALONAMENTO === */
-        /* Nível 0: Cima (Perto) */
-        .h-node.lvl-0 .h-content { bottom: 40px; }
-        .h-node.lvl-0 .h-connector { bottom: 0; height: 35px; }
-        .h-node.lvl-0 .h-dot { top: -4px; } 
-
-        /* Nível 1: Baixo (Perto) */
-        .h-node.lvl-1 .h-content { top: 40px; }
-        .h-node.lvl-1 .h-connector { top: 0; height: 35px; }
-        .h-node.lvl-1 .h-dot { top: -4px; }
-
-        /* Nível 2: Cima (Médio) */
-        .h-node.lvl-2 .h-content { bottom: 140px; }
-        .h-node.lvl-2 .h-connector { bottom: 0; height: 135px; }
-        .h-node.lvl-2 .h-dot { top: -4px; }
-
-        /* Nível 3: Baixo (Médio) */
-        .h-node.lvl-3 .h-content { top: 140px; }
-        .h-node.lvl-3 .h-connector { top: 0; height: 135px; }
-        .h-node.lvl-3 .h-dot { top: -4px; }
-
-        /* Nível 4: Cima (Longe) */
-        .h-node.lvl-4 .h-content { bottom: 240px; }
-        .h-node.lvl-4 .h-connector { bottom: 0; height: 235px; }
-        .h-node.lvl-4 .h-dot { top: -4px; }
-
-        /* Nível 5: Baixo (Longe) */
-        .h-node.lvl-5 .h-content { top: 240px; }
-        .h-node.lvl-5 .h-connector { top: 0; height: 235px; }
-        .h-node.lvl-5 .h-dot { top: -4px; }
-
-        /* Card Horizontal */
+        /* Card Horizontal - Posicionamento via JS agora */
         .h-content {
             position: absolute;
             left: 50%;
             transform: translateX(-50%);
-            width: 280px; 
-            background: white; /* Fallback */
-            padding: 6px 10px; 
-            border-radius: 6px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            border: 1px solid rgba(0,0,0,0.1); 
+            width: 260px; 
+            background: white; 
+            padding: 8px 12px; 
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border: 1px solid rgba(0,0,0,0.05); 
             transition: all 0.2s;
             cursor: pointer;
             text-align: left;
             font-size: 0.8rem;
             z-index: 5;
         }
-        .h-content:hover { z-index: 30; transform: translateX(-50%) scale(1.05); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+        .h-content:hover { z-index: 30; transform: translateX(-50%) scale(1.05); box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         .h-content.is-hidden-item { opacity: 0.5; filter: grayscale(100%); border-style: dashed !important; }
         
-        /* Evento na horizontal */
         .h-content.event-card {
-            background-color: var(--text-color) !important; /* Fundo Escuro */
+            background-color: var(--text-color) !important;
             color: white !important;
-            border-radius: 20px; /* Borda Redonda */
+            border-radius: 20px;
             border: 2px solid white;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
-        .h-content.event-card .h-date, .h-content.event-card .h-desc {
-            color: white !important;
-        }
+        .h-content.event-card .h-date, .h-content.event-card .h-desc { color: white !important; }
 
-        .h-date { font-size: 0.7rem; font-weight: bold; color: var(--text-color); display: block; margin-bottom: 2px; opacity: 0.8; }
+        .h-date { font-size: 0.75rem; font-weight: bold; color: var(--text-color); display: block; margin-bottom: 2px; opacity: 0.8; }
         .h-desc { 
             font-size: 0.85rem; 
             font-weight: 600; 
             color: var(--text-color); 
-            line-height: 1.2; 
+            line-height: 1.3; 
             display: -webkit-box; 
-            -webkit-line-clamp: 2; 
+            -webkit-line-clamp: 3; 
             -webkit-box-orient: vertical; 
             overflow: hidden; 
         }
@@ -590,6 +610,14 @@
         <div class="controls-row" id="controlsRow">
             <!-- Botão de Alternar Visão -->
             <button class="btn-filter btn-view-mode" onclick="toggleViewMode()">↔ Visão</button>
+            
+            <!-- Controle de Níveis Horizontal -->
+            <div class="level-control" id="levelControl" style="display:none; border-left: 1px solid #ccc; padding-left: 10px; margin-left: 5px;">
+                <label for="hLevelInput">Níveis:</label>
+                <!-- Alterado para step=2 para garantir pares -->
+                <input type="number" id="hLevelInput" class="level-input" value="6" min="2" max="8" step="2" onchange="updateHorizontalLevels(this.value)">
+            </div>
+
             <span style="border-left: 1px solid #ccc; margin: 0 5px;"></span>
             
             <button class="btn-filter active" onclick="setFilter('all', this)">Todas</button>
@@ -767,11 +795,12 @@
         let isHiddenFilter = false; 
         let sortOrder = 'asc'; 
         let currentActivityFilter = null;
-        let isHorizontalMode = false; // Novo Estado
+        let isHorizontalMode = false; 
         
         let currentEditingId = null;
         let currentActivityCode = null;
         let createType = 'wo'; 
+        let horizontalLevels = 6; // Padrão
 
         let starredWOs = new Set();
         let hiddenWOs = new Set();
@@ -790,6 +819,16 @@
         const COLS = { REPORT_DATE: 0, WO: 4, DESC: 5, EXEC_DATE: 9, ACT_CODE: 11, ASSET: 13, CAUSE: 27, ADDITIONAL_DESC: 53 };
         const PASTEL_COLORS = [ '#FFB3BA', '#FFDFBA', '#FFFFBA', '#BAFFC9', '#BAE1FF', '#E2F0CB', '#FFDAC1', '#FF9AA2', '#E0BBE4', '#957DAD', '#D291BC', '#FEC8D8', '#FFDFD3', '#B5EAD7', '#C7CEEA' ];
 
+        // --- SEGURANÇA: SANITIZAÇÃO (CSV INJECTION) ---
+        function sanitizeInput(str) {
+            if (typeof str !== 'string') return str;
+            // Se começar com caracteres de fórmula, adiciona ' para neutralizar
+            if (/^[=+\-@]/.test(str)) {
+                return "'" + str;
+            }
+            return str;
+        }
+
         window.onload = function() { 
             loadSavedData(); 
             setupEventListeners();
@@ -807,7 +846,22 @@
         // --- View Mode Logic ---
         function toggleViewMode() {
             isHorizontalMode = !isHorizontalMode;
+            // Toggle do controle de nível
+            document.getElementById('levelControl').style.display = isHorizontalMode ? 'flex' : 'none';
             applyFiltersAndRender();
+        }
+
+        function updateHorizontalLevels(val) {
+            horizontalLevels = parseInt(val, 10);
+            
+            // Garantir que seja par e dentro dos limites
+            if (horizontalLevels < 2) horizontalLevels = 2;
+            if (horizontalLevels > 8) horizontalLevels = 8;
+            if (horizontalLevels % 2 !== 0) horizontalLevels += 1;
+            if (horizontalLevels > 8) horizontalLevels = 8; // Re-check max após ajuste de paridade
+
+            document.getElementById('hLevelInput').value = horizontalLevels;
+            renderHorizontalTimeline(filteredData);
         }
 
         // --- Date Mask Logic ---
@@ -851,7 +905,6 @@
                 } else {
                     // For horizontal, tooltip follows mouse anywhere in the strip
                     isInTimeline = e.clientX >= hRect.left && e.clientX <= hRect.right && e.clientY >= hRect.top && e.clientY <= hRect.bottom;
-                    // Horizontal doesn't use tooltip logic as heavily since dates are visible, but let's keep consistent if needed
                 }
 
                 if (!isInTimeline) { tooltip.style.display = 'none'; return; }
@@ -871,7 +924,6 @@
                     });
                     if (closest && closest.dataset.date) tooltip.innerText = closest.dataset.date;
                 } else {
-                    // Just show a generic label or hide it for horizontal as cards have dates
                     tooltip.style.display = 'none'; 
                 }
             });
@@ -932,7 +984,6 @@
             if (!dateVal) return "";
             
             const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
-            // Check if it has time component not 00:00:00 (rough check)
             if (dateVal instanceof Date) {
                 if(dateVal.getHours() !== 0 || dateVal.getMinutes() !== 0) {
                     options.hour = '2-digit';
@@ -954,24 +1005,21 @@
                 document.getElementById('reportDateSubtitle').innerText = reportSubtitle;
             }
             dataRows.forEach(row => {
-                const wo = String(row[COLS.WO]); // Force string
+                const wo = String(row[COLS.WO]); 
                 const execDate = row[COLS.EXEC_DATE];
                 if (!wo || wo === "S/N") return; 
                 if (!execDate) { pendingCount++; return; }
                 
-                // Se execDate for data, tentamos manter horário se vier do Excel
-                // Se for string, assumimos DD/MM/AAAA
-                
                 fullData.push({
                     type: 'wo', 
-                    wo: wo,
-                    desc: row[COLS.DESC] || "Sem descrição",
+                    wo: sanitizeInput(wo),
+                    desc: sanitizeInput(row[COLS.DESC] || "Sem descrição"),
                     date: formatDate(execDate),
                     rawDate: execDate instanceof Date ? execDate : new Date(0),
-                    activityCode: row[COLS.ACT_CODE] ? String(row[COLS.ACT_CODE]).trim() : "",
-                    asset: row[COLS.ASSET] || "",
-                    cause: row[COLS.CAUSE] || "OUTROS",
-                    additionalDesc: row[COLS.ADDITIONAL_DESC] || "" // Novo Campo
+                    activityCode: sanitizeInput(row[COLS.ACT_CODE] ? String(row[COLS.ACT_CODE]).trim() : ""),
+                    asset: sanitizeInput(row[COLS.ASSET] || ""),
+                    cause: sanitizeInput(row[COLS.CAUSE] || "OUTROS"),
+                    additionalDesc: sanitizeInput(row[COLS.ADDITIONAL_DESC] || "") 
                 });
             });
             saveMainDataToStorage(fullData, { subtitle: reportSubtitle });
@@ -997,11 +1045,13 @@
                 isHiddenFilter = !!pd.settings.isHiddenFilter;
                 sortOrder = pd.settings.sortOrder || 'asc';
                 isHorizontalMode = !!pd.settings.isHorizontalMode;
+                horizontalLevels = pd.settings.horizontalLevels || 6;
+                document.getElementById('hLevelInput').value = horizontalLevels;
                 
                 document.querySelectorAll('.btn-filter').forEach(btn => {
                     if(btn.id === 'btnFilterStar') btn.classList.toggle('active', isStarredFilter);
                     else if(btn.id === 'btnFilterHide') btn.classList.toggle('active', isHiddenFilter);
-                    else if(btn.classList.contains('btn-view-mode')) { /* No active state needed visually yet */ }
+                    else if(btn.classList.contains('btn-view-mode')) { }
                     else {
                         btn.classList.remove('active');
                         const onclickAttr = btn.getAttribute('onclick');
@@ -1009,6 +1059,9 @@
                     }
                 });
             }
+            // Control visibility on load
+            document.getElementById('levelControl').style.display = isHorizontalMode ? 'flex' : 'none';
+
             if(pd.meta && pd.meta.title) {
                 document.getElementById('appTitle').innerText = pd.meta.title;
                 localStorage.setItem(STORAGE_KEY_TITLE, pd.meta.title);
@@ -1038,7 +1091,6 @@
                     : new Date(b.rawDate) - new Date(a.rawDate);
             });
 
-            // Toggle Containers
             const vContainer = document.getElementById('timelineList');
             const hContainer = document.getElementById('timelineHorizontal');
             
@@ -1053,11 +1105,14 @@
             }
         }
 
-        // --- Render Vertical (Original) ---
+        // --- SEGURANÇA: Refatorado para usar createElement (evita XSS) ---
         function renderTimeline(data) {
             const container = document.getElementById('timelineList');
             container.innerHTML = '';
-            if(data.length === 0) { container.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">Nenhuma atividade.</div>'; return; }
+            if(data.length === 0) { 
+                container.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">Nenhuma atividade.</div>'; 
+                return; 
+            }
 
             let lastDate = null;
             let lastMonthYear = "";
@@ -1103,25 +1158,36 @@
                 const isHidden = hiddenWOs.has(item.wo);
                 const hiddenClass = isHidden ? 'is-hidden-item' : '';
                 
-                // Sanitize content for HTML attributes to prevent syntax errors
-                const safeDesc = (item.desc || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n').replace(/\r/g, '');
-                const safeWO = String(item.wo).replace(/'/g, "\\'");
-
                 if (item.type === 'event') {
                     const eventDiv = document.createElement('div');
                     eventDiv.className = 'event-wrapper';
                     eventDiv.dataset.date = item.date;
                     if (marginTop > 0) eventDiv.style.marginTop = `${marginTop}px`;
-                    eventDiv.innerHTML = `<div class="event-content ${hiddenClass}" title="${safeDesc}" onclick="openDetailModal('${safeWO}', '', '${safeDesc}')"><span class="event-date">${item.date}</span>${item.desc}</div>`;
+                    
+                    const content = document.createElement('div');
+                    content.className = `event-content ${hiddenClass}`;
+                    content.title = item.desc;
+                    content.onclick = () => openDetailModal(item.wo, '', item.desc);
+                    
+                    const dateSpan = document.createElement('span');
+                    dateSpan.className = 'event-date';
+                    dateSpan.innerText = item.date;
+                    
+                    content.appendChild(dateSpan);
+                    content.appendChild(document.createTextNode(item.desc)); // Safe append
+                    
+                    eventDiv.appendChild(content);
                     container.appendChild(eventDiv);
                 } else {
                     const side = woCounter % 2 === 0 ? 'left' : 'right';
                     const styleClass = getStyleClass(item.cause);
                     const activityColor = stringToColor(item.activityCode);
                     const isStarred = starredWOs.has(item.wo);
+                    
+                    // Ícones SVG fixos
                     const starIcon = isStarred ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
                     const starClass = isStarred ? 'starred' : '';
-                    const hideIcon = isHidden ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8-11-8-11-8-11-8-11-8-11-8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+                    const hideIcon = isHidden ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8-11-8-11-8-11-8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
                     const hideBtnClass = isHidden ? 'hidden-active' : '';
 
                     const div = document.createElement('div');
@@ -1129,66 +1195,166 @@
                     div.dataset.date = item.date;
                     if (marginTop > 0) div.style.marginTop = `${marginTop}px`;
 
-                    div.innerHTML = `
-                        <div class="content ${styleClass} ${hiddenClass}" onclick="openDetailModal('${safeWO}', '${item.activityCode}', '${safeDesc}')">
-                            <div class="wo-header-row">
-                                <span class="wo-title-row"><span class="wo-title">WO: ${item.wo}</span>
-                                    <div class="card-actions">
-                                        <button class="btn-icon btn-hide ${hideBtnClass}" onclick="toggleHide('${safeWO}', event)" title="Ocultar/Exibir">${hideIcon}</button>
-                                        <button class="btn-icon btn-star ${starClass}" onclick="toggleStar('${safeWO}', event)" title="Favoritar">${starIcon}</button>
-                                    </div>
-                                </span>
-                                <span class="date-badge">${item.date}</span>
-                            </div>
-                            <div class="wo-desc">${item.desc}</div>
-                            <div class="wo-meta">
-                                ${item.asset ? `<span class="tag">🏭 ${item.asset}</span>` : ''}
-                                ${item.activityCode ? `<button class="tag tag-activity" style="background-color: ${activityColor};" onclick="event.stopPropagation(); filterByActivity('${item.activityCode}')">${item.activityCode}</button>` : ''}
-                                <span class="tag">${item.cause}</span>
-                            </div>
-                        </div>`;
+                    const content = document.createElement('div');
+                    content.className = `content ${styleClass} ${hiddenClass}`;
+                    content.onclick = () => openDetailModal(item.wo, item.activityCode, item.desc);
+
+                    // --- Header Row ---
+                    const headerRow = document.createElement('div');
+                    headerRow.className = 'wo-header-row';
+
+                    const titleRow = document.createElement('span');
+                    titleRow.className = 'wo-title-row';
+                    
+                    const titleSpan = document.createElement('span');
+                    titleSpan.className = 'wo-title';
+                    titleSpan.innerText = `WO: ${item.wo}`;
+                    
+                    const actionsDiv = document.createElement('div');
+                    actionsDiv.className = 'card-actions';
+
+                    const btnHide = document.createElement('button');
+                    btnHide.className = `btn-icon btn-hide ${hideBtnClass}`;
+                    btnHide.onclick = (e) => toggleHide(item.wo, e);
+                    btnHide.title = "Ocultar/Exibir";
+                    btnHide.innerHTML = hideIcon; // Safe SVG string
+
+                    const btnStar = document.createElement('button');
+                    btnStar.className = `btn-icon btn-star ${starClass}`;
+                    btnStar.onclick = (e) => toggleStar(item.wo, e);
+                    btnStar.title = "Favoritar";
+                    btnStar.innerHTML = starIcon; // Safe SVG string
+
+                    actionsDiv.appendChild(btnHide);
+                    actionsDiv.appendChild(btnStar);
+                    
+                    titleRow.appendChild(titleSpan);
+                    titleRow.appendChild(actionsDiv);
+
+                    const dateBadge = document.createElement('span');
+                    dateBadge.className = 'date-badge';
+                    dateBadge.innerText = item.date;
+
+                    headerRow.appendChild(titleRow);
+                    headerRow.appendChild(dateBadge);
+
+                    // --- Desc ---
+                    const descDiv = document.createElement('div');
+                    descDiv.className = 'wo-desc';
+                    descDiv.innerText = item.desc; // XSS Prevention here
+
+                    // --- Meta ---
+                    const metaDiv = document.createElement('div');
+                    metaDiv.className = 'wo-meta';
+
+                    if (item.asset) {
+                        const assetTag = document.createElement('span');
+                        assetTag.className = 'tag';
+                        assetTag.innerText = `🏭 ${item.asset}`;
+                        metaDiv.appendChild(assetTag);
+                    }
+
+                    if (item.activityCode) {
+                        const actBtn = document.createElement('button');
+                        actBtn.className = 'tag tag-activity';
+                        actBtn.style.backgroundColor = activityColor;
+                        actBtn.innerText = item.activityCode;
+                        actBtn.onclick = (e) => { e.stopPropagation(); filterByActivity(item.activityCode); };
+                        metaDiv.appendChild(actBtn);
+                    }
+
+                    const causeTag = document.createElement('span');
+                    causeTag.className = 'tag';
+                    causeTag.innerText = item.cause;
+                    metaDiv.appendChild(causeTag);
+
+                    content.appendChild(headerRow);
+                    content.appendChild(descDiv);
+                    content.appendChild(metaDiv);
+                    div.appendChild(content);
                     container.appendChild(div);
+                    
                     woCounter++;
                 }
                 lastDate = itemDate;
             });
         }
 
-        // --- Render Horizontal (New Multi-Level 6) ---
+        // --- RENDERIZADOR HORIZONTAL DINÂMICO ---
         function renderHorizontalTimeline(data) {
             const container = document.getElementById('hAxisContent');
             container.innerHTML = '';
             
             if(data.length === 0) { container.innerHTML = '<div style="margin:20px; color:#64748b;">Sem dados</div>'; return; }
 
+            // Configuração dinâmica de níveis
+            const levels = horizontalLevels;
+            const baseOffset = 45; // Distância mínima da linha
+            const step = 85; // Distância entre cada nível subsequente
+
             data.forEach((item, index) => {
                 const activityColor = item.activityCode ? stringToColor(item.activityCode) : '#cbd5e1';
-                // Safe escape for inline JS
-                const safeDesc = (item.desc || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n').replace(/\r/g, '');
-                const safeWO = String(item.wo).replace(/'/g, "\\'");
-
                 const isHidden = hiddenWOs.has(item.wo);
                 const hiddenClass = isHidden ? 'is-hidden-item' : '';
                 const isEvent = item.type === 'event';
                 
-                // Determine Level (0 to 5)
-                const level = index % 6;
+                // Lógica de distribuição Cima/Baixo
+                // Pares em Cima, Ímpares em Baixo
+                const isTop = index % 2 === 0;
                 
+                // Cálculo do Nível de Profundidade (0 a levels/2)
+                // Sequência: 0, 0, 1, 1, 2, 2... até o limite configurado
+                let depth = Math.floor(index / 2) % Math.ceil(levels / 2);
+                
+                const distance = baseOffset + (depth * step);
+                const connectorHeight = distance; // Altura precisa
+
                 const node = document.createElement('div');
-                node.className = `h-node lvl-${level}`;
+                node.className = `h-node`;
                 
-                // Background color for horizontal: Now fills the card!
-                const bgStyle = isEvent ? '' : `background-color: ${activityColor};`;
+                const bgStyle = isEvent ? '' : activityColor;
                 const eventClass = isEvent ? 'event-card' : '';
                 
-                node.innerHTML = `
-                    <div class="h-content ${hiddenClass} ${eventClass}" style="${bgStyle}" onclick="openDetailModal('${safeWO}', '${item.activityCode}', '${safeDesc}')">
-                        <span class="h-date">${item.date}</span>
-                        <span class="h-desc">${item.desc}</span>
-                    </div>
-                    <div class="h-connector"></div>
-                    <div class="h-dot" style="border-color: ${activityColor}"></div>
-                `;
+                const content = document.createElement('div');
+                content.className = `h-content ${hiddenClass} ${eventClass}`;
+                if (!isEvent) content.style.backgroundColor = bgStyle;
+                
+                // Aplicar posição dinâmica usando calc para precisão (25px é metade do eixo)
+                if (isTop) {
+                    content.style.bottom = `calc(50% + ${distance}px)`;
+                } else {
+                    content.style.top = `calc(50% + ${distance}px)`;
+                }
+
+                const safeDesc = (item.desc || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n').replace(/\r/g, '');
+                const safeWO = String(item.wo).replace(/'/g, "\\'");
+                content.onclick = () => openDetailModal(item.wo, item.activityCode, item.desc);
+
+                const dateSpan = document.createElement('span');
+                dateSpan.className = 'h-date';
+                dateSpan.innerText = item.date;
+
+                const descSpan = document.createElement('span');
+                descSpan.className = 'h-desc';
+                descSpan.innerText = item.desc;
+
+                content.appendChild(dateSpan);
+                content.appendChild(descSpan);
+
+                const connector = document.createElement('div');
+                connector.className = 'h-connector';
+                connector.style.height = `${connectorHeight}px`;
+                if (isTop) connector.style.bottom = '50%'; else connector.style.top = '50%';
+
+                const dot = document.createElement('div');
+                dot.className = 'h-dot';
+                dot.style.backgroundColor = activityColor; // Cor no centro
+                // Removemos o style.top fixo pois o CSS cuida da centralização agora
+
+                node.appendChild(content);
+                node.appendChild(connector);
+                node.appendChild(dot);
+                
                 container.appendChild(node);
             });
         }
@@ -1246,14 +1412,14 @@
             const options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
             const formattedDate = dateObj.toLocaleString('pt-BR', options);
 
-            const newItem = { type: createType, desc: desc, date: formattedDate, rawDate: dateObj };
+            const newItem = { type: createType, desc: sanitizeInput(desc), date: formattedDate, rawDate: dateObj };
             if(createType === 'wo') {
                 const wo = document.getElementById('newWO').value || "MANUAL-" + Math.floor(Math.random()*1000);
-                newItem.wo = String(wo);
-                newItem.cause = document.getElementById('newType').value;
-                newItem.asset = document.getElementById('newAsset').value;
-                newItem.activityCode = document.getElementById('newActCode').value;
-                newItem.additionalDesc = ""; // Initialize new field
+                newItem.wo = sanitizeInput(String(wo));
+                newItem.cause = sanitizeInput(document.getElementById('newType').value);
+                newItem.asset = sanitizeInput(document.getElementById('newAsset').value);
+                newItem.activityCode = sanitizeInput(document.getElementById('newActCode').value);
+                newItem.additionalDesc = ""; 
             } else { newItem.wo = "EVENT-" + Math.floor(Math.random()*1000); }
             fullData.push(newItem);
             saveMainDataToStorage(fullData, { subtitle: document.getElementById('reportDateSubtitle').innerText });
@@ -1264,14 +1430,14 @@
 
         // --- Interaction Logic ---
         function toggleStar(wo, event) {
-            event.stopPropagation();
+            if(event) event.stopPropagation();
             if(starredWOs.has(wo)) starredWOs.delete(wo); else starredWOs.add(wo);
             localStorage.setItem(STORAGE_KEY_STARRED, JSON.stringify([...starredWOs]));
             applyFiltersAndRender();
         }
 
         function toggleHide(wo, event) {
-            event.stopPropagation();
+            if(event) event.stopPropagation();
             if(hiddenWOs.has(wo)) hiddenWOs.delete(wo); else hiddenWOs.add(wo);
             localStorage.setItem(STORAGE_KEY_HIDDEN, JSON.stringify([...hiddenWOs]));
             applyFiltersAndRender();
@@ -1404,19 +1570,19 @@
 
         function saveDetails() {
             const annexData = {
-                text: document.getElementById('detailText').value,
-                periodicity: document.getElementById('detailPeriodicity').value,
-                resource: document.getElementById('detailResource').value,
-                hh: document.getElementById('detailHH').value
+                text: sanitizeInput(document.getElementById('detailText').value),
+                periodicity: sanitizeInput(document.getElementById('detailPeriodicity').value),
+                resource: sanitizeInput(document.getElementById('detailResource').value),
+                hh: sanitizeInput(document.getElementById('detailHH').value)
             };
             const newDateStr = document.getElementById('editDate').value;
-            const newWO = document.getElementById('editWO').value;
-            const newDesc = document.getElementById('editDesc').value;
-            const newType = document.getElementById('editType').value;
-            const newActCode = document.getElementById('editActCode').value;
+            const newWO = sanitizeInput(document.getElementById('editWO').value);
+            const newDesc = sanitizeInput(document.getElementById('editDesc').value);
+            const newType = sanitizeInput(document.getElementById('editType').value);
+            const newActCode = sanitizeInput(document.getElementById('editActCode').value);
             
             // NOVO: Valor do campo adicional
-            const newAdditionalDesc = document.getElementById('additionalDescText').value;
+            const newAdditionalDesc = sanitizeInput(document.getElementById('additionalDescText').value);
 
             // Regex to support optional time: DD/MM/YYYY HH:mm or DD/MM/YYYY
             const dateTimeRegex = /^(\d{2})\/(\d{2})\/(\d{4})(?: (\d{2}):(\d{2}))?$/;
@@ -1498,7 +1664,7 @@
             notes[STORAGE_KEY_STARRED] = JSON.stringify([...starredWOs]);
             notes[STORAGE_KEY_HIDDEN] = JSON.stringify([...hiddenWOs]);
             
-            const settings = { currentFilter, isStarredFilter, isHiddenFilter, sortOrder, isHorizontalMode };
+            const settings = { currentFilter, isStarredFilter, isHiddenFilter, sortOrder, isHorizontalMode, horizontalLevels };
             const title = document.getElementById('appTitle').innerText.trim() || "Cronograma_Manutencao";
             const projectData = { timestamp: new Date().toISOString(), data: fullData, notes: notes, settings: settings, meta: { subtitle: document.getElementById('reportDateSubtitle').innerText, title: title } };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData));
