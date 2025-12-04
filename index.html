@@ -248,6 +248,7 @@
         .btn-filter:hover { background: #e2e8f0; }
         .btn-filter.active { background: white; color: var(--primary-color); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         .btn-sort { color: var(--text-color); }
+        .btn-view-mode { background: #fff; border: 1px solid #cbd5e1; color: var(--primary-color); }
         
         .btn-filter-star { color: #b45309; border: 1px solid #fcd34d; background-color: #fffbeb; }
         .btn-filter-star:hover { background-color: #fef3c7; }
@@ -257,7 +258,7 @@
         .btn-filter-hide:hover { background-color: #e2e8f0; }
         .btn-filter-hide.active { background-color: #64748b; color: white; border-color: #475569; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 
-        /* --- Timeline --- */
+        /* --- Vertical Timeline (Default) --- */
         .timeline {
             position: relative;
             max-width: 1000px;
@@ -342,30 +343,13 @@
         
         /* --- Novos Estilos de Ícones (SVG) --- */
         .card-actions { display: flex; align-items: center; gap: 4px; }
-        
-        .btn-icon { 
-            background: none; 
-            border: none; 
-            cursor: pointer; 
-            padding: 4px; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            border-radius: 50%;
-        }
+        .btn-icon { background: none; border: none; cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); border-radius: 50%; }
         .btn-icon:hover { background-color: rgba(0,0,0,0.05); transform: scale(1.1); }
-        
-        /* Tamanho padrão dos SVGs */
         .btn-icon svg { width: 18px; height: 18px; stroke-width: 2; }
-
-        /* Estrela */
         .btn-star { color: #cbd5e1; }
         .btn-star.starred { color: var(--star-color); }
-        .btn-star.starred svg { fill: var(--star-color); stroke: var(--star-color); } /* Preenche quando ativa */
+        .btn-star.starred svg { fill: var(--star-color); stroke: var(--star-color); }
         .btn-star:hover { color: #fbbf24; }
-
-        /* Olho */
         .btn-hide { color: #cbd5e1; }
         .btn-hide.hidden-active { color: var(--text-color); }
         .btn-hide:hover { color: var(--text-color); }
@@ -379,19 +363,141 @@
         .tag-activity:hover { transform: scale(1.05); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         .wo-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
 
+        /* --- HORIZONTAL MODE STYLES (6 Níveis de Escalonamento & Espaçado) --- */
+        .timeline-horizontal-container {
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 350px 110px; /* Ajustado para 6 níveis */
+            white-space: nowrap;
+            position: relative;
+            background-color: var(--bg-color);
+            border-radius: 8px;
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f1f5f9;
+            display: none; 
+        }
+        
+        .timeline-horizontal-container.active { display: block; }
+
+        .h-axis {
+            height: 6px;
+            background: linear-gradient(to right, var(--primary-color), #22c55e);
+            width: max-content;
+            min-width: 100%;
+            position: relative;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            margin: 0 20px;
+        }
+        .h-axis::after {
+            content: ''; position: absolute; right: -10px; top: -7px;
+            width: 0; height: 0; 
+            border-top: 10px solid transparent; border-bottom: 10px solid transparent; border-left: 15px solid #22c55e;
+        }
+
+        /* Item Wrapper */
+        .h-node {
+            position: relative;
+            width: 50px; /* Espaçamento Horizontal Aumentado */
+            margin: 0; 
+            display: inline-block;
+            vertical-align: middle;
+            white-space: normal;
+        }
+
+        .h-dot {
+            position: absolute; left: 50%; transform: translateX(-50%);
+            width: 12px; height: 12px;
+            background: white; border: 3px solid var(--primary-color); border-radius: 50%;
+            z-index: 2; cursor: pointer; transition: transform 0.2s;
+        }
+        .h-dot:hover { transform: translateX(-50%) scale(1.3); }
+
+        .h-connector {
+            position: absolute; left: 50%; width: 2px; background-color: #cbd5e1;
+            z-index: 1; transform: translateX(-1px);
+        }
+
+        /* === 6 NÍVEIS DE ESCALONAMENTO === */
+        /* Nível 0: Cima (Perto) */
+        .h-node.lvl-0 .h-content { bottom: 40px; }
+        .h-node.lvl-0 .h-connector { bottom: 0; height: 35px; }
+        .h-node.lvl-0 .h-dot { top: -4px; } 
+
+        /* Nível 1: Baixo (Perto) */
+        .h-node.lvl-1 .h-content { top: 40px; }
+        .h-node.lvl-1 .h-connector { top: 0; height: 35px; }
+        .h-node.lvl-1 .h-dot { top: -4px; }
+
+        /* Nível 2: Cima (Médio) */
+        .h-node.lvl-2 .h-content { bottom: 140px; }
+        .h-node.lvl-2 .h-connector { bottom: 0; height: 135px; }
+        .h-node.lvl-2 .h-dot { top: -4px; }
+
+        /* Nível 3: Baixo (Médio) */
+        .h-node.lvl-3 .h-content { top: 140px; }
+        .h-node.lvl-3 .h-connector { top: 0; height: 135px; }
+        .h-node.lvl-3 .h-dot { top: -4px; }
+
+        /* Nível 4: Cima (Longe) */
+        .h-node.lvl-4 .h-content { bottom: 240px; }
+        .h-node.lvl-4 .h-connector { bottom: 0; height: 235px; }
+        .h-node.lvl-4 .h-dot { top: -4px; }
+
+        /* Nível 5: Baixo (Longe) */
+        .h-node.lvl-5 .h-content { top: 240px; }
+        .h-node.lvl-5 .h-connector { top: 0; height: 235px; }
+        .h-node.lvl-5 .h-dot { top: -4px; }
+
+        /* Card Horizontal */
+        .h-content {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 280px; 
+            background: white; /* Fallback */
+            padding: 6px 10px; 
+            border-radius: 6px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.1); 
+            transition: all 0.2s;
+            cursor: pointer;
+            text-align: left;
+            font-size: 0.8rem;
+            z-index: 5;
+        }
+        .h-content:hover { z-index: 30; transform: translateX(-50%) scale(1.05); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+        .h-content.is-hidden-item { opacity: 0.5; filter: grayscale(100%); border-style: dashed !important; }
+        
+        /* Evento na horizontal */
+        .h-content.event-card {
+            background-color: var(--text-color) !important; /* Fundo Escuro */
+            color: white !important;
+            border-radius: 20px; /* Borda Redonda */
+            border: 2px solid white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .h-content.event-card .h-date, .h-content.event-card .h-desc {
+            color: white !important;
+        }
+
+        .h-date { font-size: 0.7rem; font-weight: bold; color: var(--text-color); display: block; margin-bottom: 2px; opacity: 0.8; }
+        .h-desc { 
+            font-size: 0.85rem; 
+            font-weight: 600; 
+            color: var(--text-color); 
+            line-height: 1.2; 
+            display: -webkit-box; 
+            -webkit-line-clamp: 2; 
+            -webkit-box-orient: vertical; 
+            overflow: hidden; 
+        }
+
         /* Modal */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center; }
         .modal-overlay.active { display: flex; }
-        
-        /* Modal Window com Altura Fixa para preencher bem a tela e destacar o textarea */
-        .modal-window { 
-            background: white; width: 90%; max-width: 700px; 
-            height: 80vh; /* Altura fixa grande */
-            border-radius: 10px; padding: 20px; 
-            display: flex; flex-direction: column; 
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); 
-        }
-        
+        .modal-window { background: white; width: 90%; max-width: 700px; height: 80vh; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
         .modal-header { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
         .modal-footer { margin-top: 15px; display: flex; justify-content: space-between; align-items: center; }
         .save-btn { background-color: var(--primary-color); color: white; border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer; }
@@ -403,63 +509,15 @@
         .field-group { flex: 1; min-width: 120px; }
         .field-group label { display: block; font-size: 0.75rem; color: var(--secondary-color); margin-bottom: 4px; font-weight: bold; }
         .modal-input { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; }
+        .detail-textarea { flex-grow: 1; width: 100%; padding: 15px; border: 1px solid #cbd5e1; border-radius: 6px; resize: none; font-size: 1rem; line-height: 1.5; font-family: inherit; }
         
-        /* Área de Texto Expansível */
-        .detail-textarea { 
-            flex-grow: 1; /* Ocupa todo o espaço restante */
-            width: 100%;
-            padding: 15px; 
-            border: 1px solid #cbd5e1; 
-            border-radius: 6px; 
-            resize: none; 
-            font-size: 1rem; 
-            line-height: 1.5;
-            font-family: inherit;
-        }
-        
-        /* Estilos do Acordeão (Collapsible) */
-        details.collapsible-section {
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            background-color: #f8fafc;
-            flex-shrink: 0; /* Não encolhe, mantem tamanho do conteudo */
-        }
-
-        details.collapsible-section summary {
-            padding: 10px 15px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: var(--secondary-color);
-            list-style: none;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            outline: none;
-        }
-        
+        details.collapsible-section { border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 15px; background-color: #f8fafc; flex-shrink: 0; }
+        details.collapsible-section summary { padding: 10px 15px; cursor: pointer; font-weight: 600; font-size: 0.85rem; color: var(--secondary-color); list-style: none; display: flex; justify-content: space-between; align-items: center; outline: none; }
         details.collapsible-section summary::-webkit-details-marker { display: none; }
-
-        details.collapsible-section summary::after {
-            content: '+'; 
-            font-size: 1.2rem;
-            font-weight: bold;
-        }
-
-        details.collapsible-section[open] summary::after {
-            content: '-';
-        }
-
-        details.collapsible-section[open] {
-            border-color: var(--primary-color);
-            background-color: white;
-        }
-
-        .collapsible-content {
-            padding: 15px;
-            border-top: 1px solid #e2e8f0;
-        }
+        details.collapsible-section summary::after { content: '+'; font-size: 1.2rem; font-weight: bold; }
+        details.collapsible-section[open] summary::after { content: '-'; }
+        details.collapsible-section[open] { border-color: var(--primary-color); background-color: white; }
+        .collapsible-content { padding: 15px; border-top: 1px solid #e2e8f0; }
 
         .tab-group { display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
         .tab-btn { flex: 1; padding: 8px; border: none; background: #f1f5f9; border-radius: 6px; cursor: pointer; color: #64748b; font-weight: 600; }
@@ -530,6 +588,10 @@
         </div>
 
         <div class="controls-row" id="controlsRow">
+            <!-- Botão de Alternar Visão -->
+            <button class="btn-filter btn-view-mode" onclick="toggleViewMode()">↔ Visão</button>
+            <span style="border-left: 1px solid #ccc; margin: 0 5px;"></span>
+            
             <button class="btn-filter active" onclick="setFilter('all', this)">Todas</button>
             <button class="btn-filter" onclick="setFilter('preventiva', this)">Preventivas</button>
             <button class="btn-filter" onclick="setFilter('corretiva', this)">Corretivas</button>
@@ -539,7 +601,7 @@
             <button class="btn-filter btn-sort" onclick="toggleSort(this)">📅 Antigos ⬇️</button>
         </div>
 
-        <!-- Botão Discreto para Esconder Filtros (Movido para baixo e ajustado) -->
+        <!-- Botão Discreto para Esconder Filtros -->
         <button class="btn-toggle-filters" onclick="toggleControls()">
             <span id="toggleIcon">▲</span> Filtros & Opções
         </button>
@@ -548,11 +610,17 @@
     <!-- Tooltip Flutuante -->
     <div id="cursorTooltip">Data</div>
 
-    <div class="timeline" id="timelineList">
-        <!-- JS Preenche aqui -->
+    <!-- Vertical Timeline -->
+    <div class="timeline" id="timelineList"></div>
+
+    <!-- Horizontal Timeline (Novo) -->
+    <div class="timeline-horizontal-container" id="timelineHorizontal">
+        <div class="h-axis" id="hAxisContent">
+            <!-- Itens serão injetados aqui -->
+        </div>
     </div>
 
-    <!-- Modal Detalhamento e Edição (REORGANIZADO) -->
+    <!-- Modal Detalhamento e Edição -->
     <div class="modal-overlay" id="detailModal">
         <div class="modal-window">
             <div class="modal-header">
@@ -563,25 +631,20 @@
                 <button class="close-modal" onclick="closeDetailModal()">&times;</button>
             </div>
             
-            <!-- ACORDEÃO: Dados de Edição (Recolhido por padrão) -->
             <details class="collapsible-section">
                 <summary>📝 Editar Dados & Planejamento</summary>
                 <div class="collapsible-content">
-                    
-                    <!-- Dados Principais -->
                     <div style="margin-bottom: 10px; font-size: 0.8rem; font-weight: bold; color: var(--primary-color); border-bottom: 1px solid #e2e8f0;">Dados Principais</div>
-                    
                     <div class="modal-fields-row">
                         <div class="field-group">
-                            <label>Data (DD/MM/AAAA)</label>
-                            <input type="text" id="editDate" class="modal-input" placeholder="DD/MM/AAAA" maxlength="10" oninput="handleDateInput(this)" inputmode="numeric">
+                            <label>Data (DD/MM/AAAA HH:mm)</label>
+                            <input type="text" id="editDate" class="modal-input" placeholder="DD/MM/AAAA HH:mm" maxlength="16" oninput="handleDateInput(this)" inputmode="numeric">
                         </div>
                         <div class="field-group">
                             <label>WO (ID)</label>
                             <input type="text" id="editWO" class="modal-input">
                         </div>
                     </div>
-                    
                     <div class="modal-fields-row">
                         <div class="field-group">
                             <label>Tipo</label>
@@ -596,15 +659,11 @@
                             <input type="text" id="editActCode" class="modal-input">
                         </div>
                     </div>
-
                     <div class="field-group" style="margin-bottom:15px;">
                         <label>Descrição Curta (Título)</label>
                         <input type="text" id="editDesc" class="modal-input">
                     </div>
-
-                    <!-- Dados Planejamento -->
                     <div style="margin-bottom: 10px; font-size: 0.8rem; font-weight: bold; color: var(--primary-color); border-bottom: 1px solid #e2e8f0;">Planejamento</div>
-                    
                     <div class="modal-fields-row">
                         <div class="field-group">
                             <label>Periodicidade</label>
@@ -619,11 +678,17 @@
                             <input type="text" id="detailHH" class="modal-input" placeholder="ex: 2.5">
                         </div>
                     </div>
-
                 </div>
             </details>
 
-            <!-- Área de Texto Principal (Grande) -->
+            <!-- NOVO CAMPO ADICIONADO AQUI -->
+            <details class="collapsible-section" style="margin-top: 15px;">
+                <summary>📄 Descrição Adicional (WO)</summary>
+                <div class="collapsible-content">
+                    <textarea id="additionalDescText" class="detail-textarea" placeholder="Descrição adicional específica desta WO..."></textarea>
+                </div>
+            </details>
+
             <div class="field-group" style="display: flex; flex-direction: column; flex-grow: 1; margin-bottom: 0;">
                 <label style="font-size: 0.9rem; color: var(--text-color); font-weight: bold; margin-bottom: 8px;">Detalhes Técnicos / Observações</label>
                 <textarea id="detailText" class="detail-textarea" placeholder="Digite aqui o detalhamento técnico, histórico ou observações importantes..."></textarea>
@@ -646,20 +711,16 @@
                 <h3 style="color: var(--text-color)">Adicionar Novo Item</h3>
                 <button class="close-modal" onclick="closeCreateModal()">&times;</button>
             </div>
-            
             <div class="tab-group">
                 <button class="tab-btn active" onclick="setCreateTab('wo', this)">Ordem Serviço</button>
                 <button class="tab-btn" onclick="setCreateTab('event', this)">Evento de Linha</button>
             </div>
-
             <div class="modal-fields-row">
                 <div class="field-group">
-                    <label>Data (DD/MM/AAAA)*</label>
-                    <input type="text" id="newDate" class="modal-input" placeholder="DD/MM/AAAA" maxlength="10" oninput="handleDateInput(this)" inputmode="numeric">
+                    <label>Data (DD/MM/AAAA HH:mm)*</label>
+                    <input type="text" id="newDate" class="modal-input" placeholder="DD/MM/AAAA HH:mm" maxlength="16" oninput="handleDateInput(this)" inputmode="numeric">
                 </div>
             </div>
-
-            <!-- Campos Específicos para WO -->
             <div id="woFields">
                 <div class="modal-fields-row">
                     <div class="field-group">
@@ -686,12 +747,10 @@
                     </div>
                 </div>
             </div>
-
             <div class="field-group">
                 <label>Descrição / Título do Evento*</label>
                 <textarea id="newDesc" class="modal-input" rows="3" placeholder="Descrição..."></textarea>
             </div>
-
             <div class="modal-footer">
                 <button class="save-btn" onclick="saveNewItem()">Criar</button>
             </div>
@@ -703,15 +762,16 @@
         let filteredData = []; 
         let pendingCount = 0; 
         
-        let currentFilter = 'all'; // all, preventiva, corretiva
+        let currentFilter = 'all'; 
         let isStarredFilter = false; 
         let isHiddenFilter = false; 
         let sortOrder = 'asc'; 
         let currentActivityFilter = null;
+        let isHorizontalMode = false; // Novo Estado
         
-        let currentEditingId = null; // Stores original WO ID for comparison/update
+        let currentEditingId = null;
         let currentActivityCode = null;
-        let createType = 'wo'; // 'wo' ou 'event'
+        let createType = 'wo'; 
 
         let starredWOs = new Set();
         let hiddenWOs = new Set();
@@ -726,21 +786,14 @@
         const STORAGE_KEY_META = 'timeline_meta_info';
         const PIXELS_PER_DAY = 40; 
 
-        const COLS = {
-            REPORT_DATE: 0, WO: 4, DESC: 5, EXEC_DATE: 9, ACT_CODE: 11, ASSET: 13, CAUSE: 27
-        };
-
-        const PASTEL_COLORS = [
-            '#FFB3BA', '#FFDFBA', '#FFFFBA', '#BAFFC9', '#BAE1FF', 
-            '#E2F0CB', '#FFDAC1', '#FF9AA2', '#E0BBE4', '#957DAD',
-            '#D291BC', '#FEC8D8', '#FFDFD3', '#B5EAD7', '#C7CEEA'
-        ];
+        // Adicionei ADDITIONAL_DESC (Indice 53 = Coluna BB)
+        const COLS = { REPORT_DATE: 0, WO: 4, DESC: 5, EXEC_DATE: 9, ACT_CODE: 11, ASSET: 13, CAUSE: 27, ADDITIONAL_DESC: 53 };
+        const PASTEL_COLORS = [ '#FFB3BA', '#FFDFBA', '#FFFFBA', '#BAFFC9', '#BAE1FF', '#E2F0CB', '#FFDAC1', '#FF9AA2', '#E0BBE4', '#957DAD', '#D291BC', '#FEC8D8', '#FFDFD3', '#B5EAD7', '#C7CEEA' ];
 
         window.onload = function() { 
             loadSavedData(); 
             setupEventListeners();
             setupDragAndDrop();
-
             const urlParams = new URLSearchParams(window.location.search);
             const jsonUrl = urlParams.get('data');
             if (jsonUrl) {
@@ -751,12 +804,20 @@
             }
         }
 
+        // --- View Mode Logic ---
+        function toggleViewMode() {
+            isHorizontalMode = !isHorizontalMode;
+            applyFiltersAndRender();
+        }
+
         // --- Date Mask Logic ---
         function handleDateInput(input) {
-            let v = input.value.replace(/\D/g,''); // Remove tudo que não é dígito
-            if (v.length > 8) v = v.substring(0,8);
+            let v = input.value.replace(/\D/g,''); 
+            if (v.length > 12) v = v.substring(0,12);
             
-            if (v.length >= 5) {
+            if (v.length >= 9) { // Has minutes
+                input.value = v.substring(0,2) + '/' + v.substring(2,4) + '/' + v.substring(4,8) + ' ' + v.substring(8,10) + ':' + v.substring(10);
+            } else if (v.length >= 5) {
                 input.value = v.substring(0,2) + '/' + v.substring(2,4) + '/' + v.substring(4);
             } else if (v.length >= 3) {
                 input.value = v.substring(0,2) + '/' + v.substring(2);
@@ -766,83 +827,64 @@
         }
 
         function setupEventListeners() {
-            document.addEventListener('keydown', (e) => {
-                if(e.key === 'Escape') { closeDetailModal(); closeCreateModal(); }
-            });
-            
-            document.getElementById('appTitle').addEventListener('input', function() {
-                localStorage.setItem(STORAGE_KEY_TITLE, this.innerText);
-            });
+            document.addEventListener('keydown', (e) => { if(e.key === 'Escape') { closeDetailModal(); closeCreateModal(); } });
+            document.getElementById('appTitle').addEventListener('input', function() { localStorage.setItem(STORAGE_KEY_TITLE, this.innerText); });
 
             const timeline = document.getElementById('timelineList');
             const tooltip = document.getElementById('cursorTooltip');
             
             document.addEventListener('mousemove', (e) => {
-                // VERIFICAÇÃO DE MODAL: Se houver modal aberto, esconde tooltip
-                if (document.querySelector('.modal-overlay.active')) {
-                    tooltip.style.display = 'none';
-                    return;
-                }
-
+                if (document.querySelector('.modal-overlay.active')) { tooltip.style.display = 'none'; return; }
                 if (filteredData.length === 0) { tooltip.style.display = 'none'; return; }
-                const rect = timeline.getBoundingClientRect();
-                const isInTimeline = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
+                
+                // Check if hovering vertical OR horizontal timeline
+                const vRect = timeline.getBoundingClientRect();
+                const hRect = document.getElementById('timelineHorizontal').getBoundingClientRect();
+                
+                // Logic based on active mode
+                let isInTimeline = false;
+                let containers = [];
 
-                if (!isInTimeline) {
-                    tooltip.style.display = 'none';
-                    return;
+                if(!isHorizontalMode) {
+                    isInTimeline = e.clientX >= vRect.left && e.clientX <= vRect.right && e.clientY >= vRect.top && e.clientY <= vRect.bottom;
+                    if(isInTimeline) containers = document.querySelectorAll('.container, .event-wrapper');
+                } else {
+                    // For horizontal, tooltip follows mouse anywhere in the strip
+                    isInTimeline = e.clientX >= hRect.left && e.clientX <= hRect.right && e.clientY >= hRect.top && e.clientY <= hRect.bottom;
+                    // Horizontal doesn't use tooltip logic as heavily since dates are visible, but let's keep consistent if needed
                 }
+
+                if (!isInTimeline) { tooltip.style.display = 'none'; return; }
 
                 tooltip.style.display = 'block';
                 tooltip.style.left = (e.clientX + 15) + 'px';
                 tooltip.style.top = (e.clientY + 15) + 'px';
 
-                let closest = null;
-                let minDiff = Infinity;
-                const containers = document.querySelectorAll('.container, .event-wrapper');
-
-                containers.forEach(el => {
-                    const box = el.getBoundingClientRect();
-                    const center = box.top + (box.height / 2);
-                    const diff = Math.abs(e.clientY - center);
-                    if (diff < minDiff) {
-                        minDiff = diff;
-                        closest = el;
-                    }
-                });
-
-                if (closest && closest.dataset.date) {
-                    tooltip.innerText = closest.dataset.date;
+                if(!isHorizontalMode && containers.length > 0) {
+                    let closest = null;
+                    let minDiff = Infinity;
+                    containers.forEach(el => {
+                        const box = el.getBoundingClientRect();
+                        const center = box.top + (box.height / 2);
+                        const diff = Math.abs(e.clientY - center);
+                        if (diff < minDiff) { minDiff = diff; closest = el; }
+                    });
+                    if (closest && closest.dataset.date) tooltip.innerText = closest.dataset.date;
+                } else {
+                    // Just show a generic label or hide it for horizontal as cards have dates
+                    tooltip.style.display = 'none'; 
                 }
             });
         }
 
         // --- Drag & Drop Logic ---
         function setupDragAndDrop() {
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                document.body.addEventListener(eventName, preventDefaults, false);
-            });
-
-            function preventDefaults(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => { document.body.addEventListener(eventName, preventDefaults, false); });
+            function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
             let dragCounter = 0;
             const overlay = document.getElementById('dropZoneOverlay');
-
-            document.body.addEventListener('dragenter', (e) => {
-                dragCounter++;
-                document.body.classList.add('dragging');
-            });
-
-            document.body.addEventListener('dragleave', (e) => {
-                dragCounter--;
-                if (dragCounter === 0) {
-                    document.body.classList.remove('dragging');
-                }
-            });
-            
+            document.body.addEventListener('dragenter', (e) => { dragCounter++; document.body.classList.add('dragging'); });
+            document.body.addEventListener('dragleave', (e) => { dragCounter--; if (dragCounter === 0) { document.body.classList.remove('dragging'); } });
             document.body.addEventListener('drop', handleDrop);
         }
 
@@ -850,13 +892,9 @@
             document.body.classList.remove('dragging');
             const dt = e.dataTransfer;
             const files = dt.files;
-
             if (files.length > 0) {
                 const file = files[0];
-                if(fullData.length > 0) {
-                    if(!confirm(`Tem certeza que deseja substituir os dados atuais pelo arquivo "${file.name}"?`)) return;
-                }
-
+                if(fullData.length > 0 && !confirm(`Tem certeza que deseja substituir os dados atuais pelo arquivo "${file.name}"?`)) return;
                 if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
                     const reader = new FileReader();
                     reader.onload = function(evt) {
@@ -870,16 +908,9 @@
                     reader.readAsArrayBuffer(file);
                 } else if (file.name.endsWith('.json')) {
                     const reader = new FileReader();
-                    reader.onload = function(evt) {
-                        try {
-                            loadProjectData(JSON.parse(evt.target.result));
-                            alert("Projeto importado!");
-                        } catch(err) { alert("Erro JSON inválido"); }
-                    };
+                    reader.onload = function(evt) { try { loadProjectData(JSON.parse(evt.target.result)); alert("Projeto importado!"); } catch(err) { alert("Erro JSON inválido"); } };
                     reader.readAsText(file);
-                } else {
-                    alert("Formato não suportado. Use Excel (.xlsx) ou JSON.");
-                }
+                } else { alert("Formato não suportado. Use Excel (.xlsx) ou JSON."); }
             }
         }
 
@@ -888,20 +919,27 @@
             if(!str) return '#e2e8f0';
             let hash = 0;
             for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-            const index = Math.abs(hash) % PASTEL_COLORS.length;
-            return PASTEL_COLORS[index];
+            return PASTEL_COLORS[Math.abs(hash) % PASTEL_COLORS.length];
         }
 
         function getDaysDiff(date1, date2) {
             const d1 = new Date(date1); d1.setHours(0,0,0,0);
             const d2 = new Date(date2); d2.setHours(0,0,0,0);
-            const oneDay = 24 * 60 * 60 * 1000; 
-            return Math.round(Math.abs((d1 - d2) / oneDay));
+            return Math.round(Math.abs((d1 - d2) / (24 * 60 * 60 * 1000)));
         }
 
         function formatDate(dateVal) {
             if (!dateVal) return "";
-            if (dateVal instanceof Date) return dateVal.toLocaleDateString('pt-BR');
+            
+            const options = { day: '2-digit', month: '2-digit', year: 'numeric' };
+            // Check if it has time component not 00:00:00 (rough check)
+            if (dateVal instanceof Date) {
+                if(dateVal.getHours() !== 0 || dateVal.getMinutes() !== 0) {
+                    options.hour = '2-digit';
+                    options.minute = '2-digit';
+                }
+                return dateVal.toLocaleString('pt-BR', options);
+            }
             return String(dateVal);
         }
 
@@ -916,10 +954,14 @@
                 document.getElementById('reportDateSubtitle').innerText = reportSubtitle;
             }
             dataRows.forEach(row => {
-                const wo = row[COLS.WO];
+                const wo = String(row[COLS.WO]); // Force string
                 const execDate = row[COLS.EXEC_DATE];
                 if (!wo || wo === "S/N") return; 
                 if (!execDate) { pendingCount++; return; }
+                
+                // Se execDate for data, tentamos manter horário se vier do Excel
+                // Se for string, assumimos DD/MM/AAAA
+                
                 fullData.push({
                     type: 'wo', 
                     wo: wo,
@@ -928,7 +970,8 @@
                     rawDate: execDate instanceof Date ? execDate : new Date(0),
                     activityCode: row[COLS.ACT_CODE] ? String(row[COLS.ACT_CODE]).trim() : "",
                     asset: row[COLS.ASSET] || "",
-                    cause: row[COLS.CAUSE] || "OUTROS"
+                    cause: row[COLS.CAUSE] || "OUTROS",
+                    additionalDesc: row[COLS.ADDITIONAL_DESC] || "" // Novo Campo
                 });
             });
             saveMainDataToStorage(fullData, { subtitle: reportSubtitle });
@@ -941,59 +984,41 @@
             if(!pd.data) throw new Error("Inválido");
             fullData = pd.data;
             fullData.forEach(item => item.rawDate = new Date(item.rawDate));
-            
             if(pd.notes) {
                 Object.keys(pd.notes).forEach(k => {
-                    if(k === STORAGE_KEY_STARRED) {
-                        starredWOs = new Set(JSON.parse(pd.notes[k]));
-                        localStorage.setItem(STORAGE_KEY_STARRED, pd.notes[k]);
-                    } else if (k === STORAGE_KEY_HIDDEN) {
-                        hiddenWOs = new Set(JSON.parse(pd.notes[k]));
-                        localStorage.setItem(STORAGE_KEY_HIDDEN, pd.notes[k]);
-                    } else {
-                        localStorage.setItem(k, pd.notes[k]);
-                    }
+                    if(k === STORAGE_KEY_STARRED) starredWOs = new Set(JSON.parse(pd.notes[k]));
+                    else if (k === STORAGE_KEY_HIDDEN) hiddenWOs = new Set(JSON.parse(pd.notes[k]));
+                    else localStorage.setItem(k, pd.notes[k]);
                 });
             }
-            
             if (pd.settings) {
                 currentFilter = pd.settings.currentFilter || 'all';
                 isStarredFilter = !!pd.settings.isStarredFilter;
                 isHiddenFilter = !!pd.settings.isHiddenFilter;
                 sortOrder = pd.settings.sortOrder || 'asc';
+                isHorizontalMode = !!pd.settings.isHorizontalMode;
                 
                 document.querySelectorAll('.btn-filter').forEach(btn => {
-                    if(btn.id === 'btnFilterStar') {
-                        btn.classList.toggle('active', isStarredFilter);
-                    } else if(btn.id === 'btnFilterHide') {
-                        btn.classList.toggle('active', isHiddenFilter);
-                    } else {
+                    if(btn.id === 'btnFilterStar') btn.classList.toggle('active', isStarredFilter);
+                    else if(btn.id === 'btnFilterHide') btn.classList.toggle('active', isHiddenFilter);
+                    else if(btn.classList.contains('btn-view-mode')) { /* No active state needed visually yet */ }
+                    else {
                         btn.classList.remove('active');
                         const onclickAttr = btn.getAttribute('onclick');
-                        if (onclickAttr && onclickAttr.includes(`'${currentFilter}'`)) {
-                            btn.classList.add('active');
-                        }
+                        if (onclickAttr && onclickAttr.includes(`'${currentFilter}'`)) btn.classList.add('active');
                     }
                 });
-                
-                const sortBtn = document.querySelector('.btn-sort');
-                if (sortBtn) {
-                    sortBtn.innerText = sortOrder === 'asc' ? '📅 Antigos ⬇️' : '📅 Recentes ⬆️';
-                }
             }
-
-            if(pd.meta?.title) {
+            if(pd.meta && pd.meta.title) {
                 document.getElementById('appTitle').innerText = pd.meta.title;
                 localStorage.setItem(STORAGE_KEY_TITLE, pd.meta.title);
             }
-
             saveMainDataToStorage(fullData, { subtitle: pd.meta?.subtitle });
             document.getElementById('reportDateSubtitle').innerText = pd.meta?.subtitle || "Importado";
             applyFiltersAndRender();
             if(isChartVisible) updateChart();
         }
 
-        // --- Render Logic ---
         function applyFiltersAndRender() {
             filteredData = fullData.filter(item => {
                 if (hiddenWOs.has(item.wo) && isHiddenFilter) return false;
@@ -1013,17 +1038,26 @@
                     : new Date(b.rawDate) - new Date(a.rawDate);
             });
 
-            renderTimeline(filteredData);
+            // Toggle Containers
+            const vContainer = document.getElementById('timelineList');
+            const hContainer = document.getElementById('timelineHorizontal');
+            
+            if(isHorizontalMode) {
+                vContainer.style.display = 'none';
+                hContainer.classList.add('active');
+                renderHorizontalTimeline(filteredData);
+            } else {
+                hContainer.classList.remove('active');
+                vContainer.style.display = 'block';
+                renderTimeline(filteredData);
+            }
         }
 
+        // --- Render Vertical (Original) ---
         function renderTimeline(data) {
             const container = document.getElementById('timelineList');
             container.innerHTML = '';
-            
-            if(data.length === 0) {
-                container.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">Nenhuma atividade.</div>';
-                return;
-            }
+            if(data.length === 0) { container.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">Nenhuma atividade.</div>'; return; }
 
             let lastDate = null;
             let lastMonthYear = "";
@@ -1044,11 +1078,9 @@
                 let marginTop = 0;
                 if (lastDate) {
                     const daysDiff = getDaysDiff(itemDate, lastDate);
-                    
                     if (daysDiff >= 1) { 
                         const gapDiv = document.createElement('div');
                         gapDiv.className = 'timeline-gap';
-                        
                         if (daysDiff > 1) {
                             const effectiveGap = Math.min(daysDiff, 60); 
                             gapDiv.style.height = `${effectiveGap * PIXELS_PER_DAY}px`;
@@ -1062,7 +1094,6 @@
                             container.appendChild(gapDiv);
                         }
                     } else {
-                        // Intra-day gap
                         const intraGap = document.createElement('div');
                         intraGap.className = 'intra-day-gap';
                         container.appendChild(intraGap);
@@ -1071,53 +1102,40 @@
 
                 const isHidden = hiddenWOs.has(item.wo);
                 const hiddenClass = isHidden ? 'is-hidden-item' : '';
+                
+                // Sanitize content for HTML attributes to prevent syntax errors
+                const safeDesc = (item.desc || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n').replace(/\r/g, '');
+                const safeWO = String(item.wo).replace(/'/g, "\\'");
 
                 if (item.type === 'event') {
                     const eventDiv = document.createElement('div');
                     eventDiv.className = 'event-wrapper';
                     eventDiv.dataset.date = item.date;
                     if (marginTop > 0) eventDiv.style.marginTop = `${marginTop}px`;
-                    
-                    eventDiv.innerHTML = `
-                        <div class="event-content ${hiddenClass}" title="${item.desc}" onclick="openDetailModal('${item.wo}', '', '${item.desc.replace(/'/g, "\\'")}')">
-                            <span class="event-date">${item.date}</span>
-                            ${item.desc}
-                        </div>
-                    `;
+                    eventDiv.innerHTML = `<div class="event-content ${hiddenClass}" title="${safeDesc}" onclick="openDetailModal('${safeWO}', '', '${safeDesc}')"><span class="event-date">${item.date}</span>${item.desc}</div>`;
                     container.appendChild(eventDiv);
-
                 } else {
                     const side = woCounter % 2 === 0 ? 'left' : 'right';
                     const styleClass = getStyleClass(item.cause);
                     const activityColor = stringToColor(item.activityCode);
-                    const safeDesc = item.desc.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                    
                     const isStarred = starredWOs.has(item.wo);
-                    const starIcon = isStarred 
-                        ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`
-                        : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+                    const starIcon = isStarred ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
                     const starClass = isStarred ? 'starred' : '';
-
-                    const hideIcon = isHidden 
-                        ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`
-                        : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8-11-8-11-8-11-8-11-8-11-8-11-8-11-8-11-8-11-8-11-8-11-8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
-                    
+                    const hideIcon = isHidden ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8-11-8-11-8-11-8-11-8-11-8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
                     const hideBtnClass = isHidden ? 'hidden-active' : '';
 
                     const div = document.createElement('div');
                     div.className = `container ${side}`;
                     div.dataset.date = item.date;
-                    
                     if (marginTop > 0) div.style.marginTop = `${marginTop}px`;
 
                     div.innerHTML = `
-                        <div class="content ${styleClass} ${hiddenClass}" onclick="openDetailModal('${item.wo}', '${item.activityCode}', '${safeDesc}')">
+                        <div class="content ${styleClass} ${hiddenClass}" onclick="openDetailModal('${safeWO}', '${item.activityCode}', '${safeDesc}')">
                             <div class="wo-header-row">
-                                <span class="wo-title-row">
-                                    <span class="wo-title">WO: ${item.wo}</span>
+                                <span class="wo-title-row"><span class="wo-title">WO: ${item.wo}</span>
                                     <div class="card-actions">
-                                        <button class="btn-icon btn-hide ${hideBtnClass}" onclick="toggleHide('${item.wo}', event)" title="Ocultar/Exibir">${hideIcon}</button>
-                                        <button class="btn-icon btn-star ${starClass}" onclick="toggleStar('${item.wo}', event)" title="Favoritar">${starIcon}</button>
+                                        <button class="btn-icon btn-hide ${hideBtnClass}" onclick="toggleHide('${safeWO}', event)" title="Ocultar/Exibir">${hideIcon}</button>
+                                        <button class="btn-icon btn-star ${starClass}" onclick="toggleStar('${safeWO}', event)" title="Favoritar">${starIcon}</button>
                                     </div>
                                 </span>
                                 <span class="date-badge">${item.date}</span>
@@ -1125,35 +1143,67 @@
                             <div class="wo-desc">${item.desc}</div>
                             <div class="wo-meta">
                                 ${item.asset ? `<span class="tag">🏭 ${item.asset}</span>` : ''}
-                                ${item.activityCode ? 
-                                    `<button class="tag tag-activity" 
-                                        style="background-color: ${activityColor};" 
-                                        onclick="event.stopPropagation(); filterByActivity('${item.activityCode}')">
-                                        ${item.activityCode}
-                                    </button>` : ''}
+                                ${item.activityCode ? `<button class="tag tag-activity" style="background-color: ${activityColor};" onclick="event.stopPropagation(); filterByActivity('${item.activityCode}')">${item.activityCode}</button>` : ''}
                                 <span class="tag">${item.cause}</span>
                             </div>
-                        </div>
-                    `;
+                        </div>`;
                     container.appendChild(div);
                     woCounter++;
                 }
-                
                 lastDate = itemDate;
             });
         }
 
-        // --- Creation Logic ---
+        // --- Render Horizontal (New Multi-Level 6) ---
+        function renderHorizontalTimeline(data) {
+            const container = document.getElementById('hAxisContent');
+            container.innerHTML = '';
+            
+            if(data.length === 0) { container.innerHTML = '<div style="margin:20px; color:#64748b;">Sem dados</div>'; return; }
+
+            data.forEach((item, index) => {
+                const activityColor = item.activityCode ? stringToColor(item.activityCode) : '#cbd5e1';
+                // Safe escape for inline JS
+                const safeDesc = (item.desc || "").replace(/\\/g, "\\\\").replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, '\\n').replace(/\r/g, '');
+                const safeWO = String(item.wo).replace(/'/g, "\\'");
+
+                const isHidden = hiddenWOs.has(item.wo);
+                const hiddenClass = isHidden ? 'is-hidden-item' : '';
+                const isEvent = item.type === 'event';
+                
+                // Determine Level (0 to 5)
+                const level = index % 6;
+                
+                const node = document.createElement('div');
+                node.className = `h-node lvl-${level}`;
+                
+                // Background color for horizontal: Now fills the card!
+                const bgStyle = isEvent ? '' : `background-color: ${activityColor};`;
+                const eventClass = isEvent ? 'event-card' : '';
+                
+                node.innerHTML = `
+                    <div class="h-content ${hiddenClass} ${eventClass}" style="${bgStyle}" onclick="openDetailModal('${safeWO}', '${item.activityCode}', '${safeDesc}')">
+                        <span class="h-date">${item.date}</span>
+                        <span class="h-desc">${item.desc}</span>
+                    </div>
+                    <div class="h-connector"></div>
+                    <div class="h-dot" style="border-color: ${activityColor}"></div>
+                `;
+                container.appendChild(node);
+            });
+        }
+
+        // --- Creation & Edit Logic ---
         function openCreateModal() {
             document.getElementById('createModal').classList.add('active');
-            
-            // Set Today's Date formatted as DD/MM/YYYY
             const today = new Date();
             const dd = String(today.getDate()).padStart(2, '0');
-            const mm = String(today.getMonth() + 1).padStart(2, '0'); // Jan is 0
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
             const yyyy = today.getFullYear();
+            const HH = String(today.getHours()).padStart(2, '0');
+            const MM = String(today.getMinutes()).padStart(2, '0');
             
-            document.getElementById('newDate').value = `${dd}/${mm}/${yyyy}`;
+            document.getElementById('newDate').value = `${dd}/${mm}/${yyyy} ${HH}:${MM}`;
             document.getElementById('newWO').value = '';
             document.getElementById('newAsset').value = '';
             document.getElementById('newActCode').value = '';
@@ -1161,67 +1211,50 @@
             setCreateTab('wo', document.querySelector('.tab-btn')); 
         }
 
-        function closeCreateModal() {
-            document.getElementById('createModal').classList.remove('active');
-        }
+        function closeCreateModal() { document.getElementById('createModal').classList.remove('active'); }
 
         function setCreateTab(type, btn) {
             createType = type;
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
-            
             const woFields = document.getElementById('woFields');
-            if(type === 'event') {
-                woFields.style.display = 'none';
-            } else {
-                woFields.style.display = 'block';
-            }
+            if(type === 'event') woFields.style.display = 'none'; else woFields.style.display = 'block';
         }
 
         function saveNewItem() {
             const dateVal = document.getElementById('newDate').value;
             const desc = document.getElementById('newDesc').value;
-            
             if(!dateVal || !desc) { alert("Preencha a data e a descrição."); return; }
             
-            // Validate Date Format DD/MM/YYYY
-            const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
-            if (!dateRegex.test(dateVal)) {
-                alert("Data inválida. Use o formato DD/MM/AAAA.");
-                return;
-            }
-
-            const parts = dateVal.split('/');
-            const day = parseInt(parts[0], 10);
-            const month = parseInt(parts[1], 10) - 1; 
-            const year = parseInt(parts[2], 10);
+            // Check for date format: DD/MM/YYYY HH:mm or DD/MM/YYYY
+            const dateTimeRegex = /^(\d{2})\/(\d{2})\/(\d{4})(?: (\d{2}):(\d{2}))?$/;
+            const match = dateVal.match(dateTimeRegex);
             
-            const dateObj = new Date(year, month, day, 12, 0, 0); 
+            if (!match) { alert("Data inválida. Use o formato DD/MM/AAAA HH:mm."); return; }
+
+            const day = parseInt(match[1], 10);
+            const month = parseInt(match[2], 10) - 1; 
+            const year = parseInt(match[3], 10);
+            const hour = match[4] ? parseInt(match[4], 10) : 12;
+            const minute = match[5] ? parseInt(match[5], 10) : 0;
+
+            const dateObj = new Date(year, month, day, hour, minute, 0); 
             
-            if (isNaN(dateObj.getTime()) || dateObj.getMonth() !== month) {
-                 alert("Data inexistente.");
-                 return;
-            }
+            if (isNaN(dateObj.getTime()) || dateObj.getMonth() !== month) { alert("Data inexistente."); return; }
+            
+            // Format for display
+            const options = { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
+            const formattedDate = dateObj.toLocaleString('pt-BR', options);
 
-            const formattedDate = dateObj.toLocaleDateString('pt-BR');
-
-            const newItem = {
-                type: createType,
-                desc: desc,
-                date: formattedDate,
-                rawDate: dateObj
-            };
-
+            const newItem = { type: createType, desc: desc, date: formattedDate, rawDate: dateObj };
             if(createType === 'wo') {
                 const wo = document.getElementById('newWO').value || "MANUAL-" + Math.floor(Math.random()*1000);
-                newItem.wo = wo;
+                newItem.wo = String(wo);
                 newItem.cause = document.getElementById('newType').value;
                 newItem.asset = document.getElementById('newAsset').value;
                 newItem.activityCode = document.getElementById('newActCode').value;
-            } else {
-                newItem.wo = "EVENT-" + Math.floor(Math.random()*1000); 
-            }
-
+                newItem.additionalDesc = ""; // Initialize new field
+            } else { newItem.wo = "EVENT-" + Math.floor(Math.random()*1000); }
             fullData.push(newItem);
             saveMainDataToStorage(fullData, { subtitle: document.getElementById('reportDateSubtitle').innerText });
             applyFiltersAndRender();
@@ -1232,16 +1265,14 @@
         // --- Interaction Logic ---
         function toggleStar(wo, event) {
             event.stopPropagation();
-            if(starredWOs.has(wo)) starredWOs.delete(wo);
-            else starredWOs.add(wo);
+            if(starredWOs.has(wo)) starredWOs.delete(wo); else starredWOs.add(wo);
             localStorage.setItem(STORAGE_KEY_STARRED, JSON.stringify([...starredWOs]));
             applyFiltersAndRender();
         }
 
         function toggleHide(wo, event) {
             event.stopPropagation();
-            if(hiddenWOs.has(wo)) hiddenWOs.delete(wo);
-            else hiddenWOs.add(wo);
+            if(hiddenWOs.has(wo)) hiddenWOs.delete(wo); else hiddenWOs.add(wo);
             localStorage.setItem(STORAGE_KEY_HIDDEN, JSON.stringify([...hiddenWOs]));
             applyFiltersAndRender();
         }
@@ -1249,7 +1280,7 @@
         function deleteCurrentItem() {
             if(!currentEditingId) return;
             if(confirm("Tem certeza que deseja EXCLUIR este item? Esta ação não pode ser desfeita.")) {
-                fullData = fullData.filter(item => item.wo !== currentEditingId);
+                fullData = fullData.filter(item => String(item.wo) !== String(currentEditingId));
                 starredWOs.delete(currentEditingId);
                 hiddenWOs.delete(currentEditingId);
                 saveMainDataToStorage(fullData, { subtitle: document.getElementById('reportDateSubtitle').innerText });
@@ -1270,41 +1301,16 @@
         function setFilter(type, btn) {
             currentFilter = type;
             document.querySelectorAll('.btn-filter').forEach(b => { 
-                if(!b.classList.contains('btn-sort') && !b.classList.contains('btn-filter-star') && !b.classList.contains('btn-filter-hide')) b.classList.remove('active'); 
+                if(!b.classList.contains('btn-sort') && !b.classList.contains('btn-filter-star') && !b.classList.contains('btn-filter-hide') && !b.classList.contains('btn-view-mode')) b.classList.remove('active'); 
             });
             btn.classList.add('active');
             applyFiltersAndRender();
         }
 
-        function toggleStarredFilter(btn) {
-            isStarredFilter = !isStarredFilter;
-            btn.classList.toggle('active', isStarredFilter);
-            applyFiltersAndRender();
-        }
-
-        function toggleHiddenFilter(btn) {
-            isHiddenFilter = !isHiddenFilter;
-            btn.classList.toggle('active', isHiddenFilter);
-            applyFiltersAndRender();
-        }
-
-        // Função para alternar a visibilidade da barra de controles
-        function toggleControls() {
-            const row = document.getElementById('controlsRow');
-            const icon = document.getElementById('toggleIcon');
-            row.classList.toggle('hidden');
-            
-            // Muda o ícone dependendo do estado
-            const isHidden = row.classList.contains('hidden');
-            icon.innerText = isHidden ? '▶' : '▲';
-        }
-
-        function toggleSort(btn) {
-            sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
-            btn.innerText = sortOrder === 'asc' ? '📅 Antigos ⬇️' : '📅 Recentes ⬆️';
-            applyFiltersAndRender();
-        }
-
+        function toggleStarredFilter(btn) { isStarredFilter = !isStarredFilter; btn.classList.toggle('active', isStarredFilter); applyFiltersAndRender(); }
+        function toggleHiddenFilter(btn) { isHiddenFilter = !isHiddenFilter; btn.classList.toggle('active', isHiddenFilter); applyFiltersAndRender(); }
+        function toggleSort(btn) { sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'; btn.innerText = sortOrder === 'asc' ? '📅 Antigos ⬇️' : '📅 Recentes ⬆️'; applyFiltersAndRender(); }
+        
         function filterByActivity(code) {
             currentActivityFilter = code;
             document.getElementById('activeActivityFilter').style.display = 'flex';
@@ -1329,15 +1335,9 @@
         function loadSavedData() {
             const savedData = localStorage.getItem(STORAGE_KEY_DATA);
             const savedMeta = localStorage.getItem(STORAGE_KEY_META);
-            
-            const savedStars = localStorage.getItem(STORAGE_KEY_STARRED);
-            if(savedStars) starredWOs = new Set(JSON.parse(savedStars));
-            
-            const savedHidden = localStorage.getItem(STORAGE_KEY_HIDDEN);
-            if(savedHidden) hiddenWOs = new Set(JSON.parse(savedHidden));
-
-            const savedTitle = localStorage.getItem(STORAGE_KEY_TITLE);
-            if(savedTitle) document.getElementById('appTitle').innerText = savedTitle;
+            if(localStorage.getItem(STORAGE_KEY_STARRED)) starredWOs = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY_STARRED)));
+            if(localStorage.getItem(STORAGE_KEY_HIDDEN)) hiddenWOs = new Set(JSON.parse(localStorage.getItem(STORAGE_KEY_HIDDEN)));
+            if(localStorage.getItem(STORAGE_KEY_TITLE)) document.getElementById('appTitle').innerText = localStorage.getItem(STORAGE_KEY_TITLE);
 
             if (savedData) {
                 fullData = JSON.parse(savedData);
@@ -1349,25 +1349,15 @@
             }
         }
 
-        function clearAllData() {
-            if(confirm("Apagar tudo?")) { localStorage.clear(); location.reload(); }
-        }
+        function clearAllData() { if(confirm("Apagar tudo?")) { localStorage.clear(); location.reload(); } }
+        function checkPendingAlert(count) { const alertEl = document.getElementById('pendingAlert'); if (count > 0) { alertEl.style.display = 'block'; alertEl.innerText = `⚠️ ${count} atividades sem Data de Execução ocultadas.`; } else { alertEl.style.display = 'none'; } }
 
-        function checkPendingAlert(count) {
-            const alertEl = document.getElementById('pendingAlert');
-            if (count > 0) { alertEl.style.display = 'block'; alertEl.innerText = `⚠️ ${count} atividades sem Data de Execução ocultadas.`; }
-            else { alertEl.style.display = 'none'; }
-        }
-
-        // --- Modal Detalhes & Edição ---
         function openDetailModal(wo, actCode, desc) {
             const modal = document.getElementById('detailModal');
-            currentEditingId = wo; // Guardamos o ID Original
+            currentEditingId = wo; 
             currentActivityCode = actCode === "undefined" || actCode === "" ? null : actCode;
             const infoEl = document.getElementById('modalActivityInfo');
-            
-            // Encontrar o item no fullData para popular os campos de edição
-            const item = fullData.find(i => i.wo === wo);
+            const item = fullData.find(i => String(i.wo) === String(wo));
             
             if (item) {
                 document.getElementById('editDate').value = item.date;
@@ -1375,15 +1365,18 @@
                 document.getElementById('editDesc').value = item.desc;
                 document.getElementById('editActCode').value = item.activityCode || "";
                 
-                // Tipo (Tenta mapear para os valores do select)
+                // NOVO: Carregar campo adicional
+                document.getElementById('additionalDescText').value = item.additionalDesc || "";
+
+                // --- CORREÇÃO APLICADA AQUI ---
                 let typeVal = "OUTROS";
                 const c = (item.cause || "").toUpperCase();
-                if(c.includes("PREVENTIVA")) typeVal = "PREVENTIVA";
-                else if(c.includes("CORRETIVA")) typeVal = "CORRETIVA";
+                if(c.includes("PREVENTIV")) typeVal = "PREVENTIVA"; 
+                else if(c.includes("CORRETIV") || c.includes("CORRECT")) typeVal = "CORRETIVA";
                 document.getElementById('editType').value = typeVal;
+                // ------------------------------
                 
                 if(wo.startsWith('EVENT')) {
-                    // Ajustes visuais para eventos
                     infoEl.innerHTML = 'Evento';
                     document.getElementById('editActCode').disabled = true;
                     document.getElementById('editType').disabled = true;
@@ -1394,7 +1387,6 @@
                 }
             }
 
-            // Carregar anexos
             const key = currentActivityCode ? `annex_act_${currentActivityCode}` : `annex_wo_${wo}`;
             const savedRaw = localStorage.getItem(key);
             let data = { text: "", periodicity: "", resource: "", hh: "" };
@@ -1404,7 +1396,6 @@
             document.getElementById('detailPeriodicity').value = data.periodicity;
             document.getElementById('detailResource').value = data.resource;
             document.getElementById('detailHH').value = data.hh;
-            
             document.getElementById('saveStatus').style.opacity = '0';
             modal.classList.add('active');
         }
@@ -1412,88 +1403,67 @@
         function closeDetailModal() { document.getElementById('detailModal').classList.remove('active'); }
 
         function saveDetails() {
-            // 1. Salvar Anexos (LocalStorage)
             const annexData = {
                 text: document.getElementById('detailText').value,
                 periodicity: document.getElementById('detailPeriodicity').value,
                 resource: document.getElementById('detailResource').value,
                 hh: document.getElementById('detailHH').value
             };
-            
-            // 2. Obter Novos Valores de Edição
             const newDateStr = document.getElementById('editDate').value;
             const newWO = document.getElementById('editWO').value;
             const newDesc = document.getElementById('editDesc').value;
             const newType = document.getElementById('editType').value;
             const newActCode = document.getElementById('editActCode').value;
-
-            // Validar Data
-            const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
-            if (!dateRegex.test(newDateStr)) { alert("Data inválida (DD/MM/AAAA)"); return; }
             
-            const parts = newDateStr.split('/');
-            const day = parseInt(parts[0], 10);
-            const month = parseInt(parts[1], 10) - 1; 
-            const year = parseInt(parts[2], 10);
-            const newDateObj = new Date(year, month, day, 12, 0, 0);
+            // NOVO: Valor do campo adicional
+            const newAdditionalDesc = document.getElementById('additionalDescText').value;
 
-            // 3. Atualizar Item no fullData
-            const itemIndex = fullData.findIndex(i => i.wo === currentEditingId);
+            // Regex to support optional time: DD/MM/YYYY HH:mm or DD/MM/YYYY
+            const dateTimeRegex = /^(\d{2})\/(\d{2})\/(\d{4})(?: (\d{2}):(\d{2}))?$/;
+            const match = newDateStr.match(dateTimeRegex);
+
+            if (!match) { alert("Data inválida (DD/MM/AAAA HH:mm)"); return; }
+            
+            const day = parseInt(match[1], 10);
+            const month = parseInt(match[2], 10) - 1; 
+            const year = parseInt(match[3], 10);
+            const hour = match[4] ? parseInt(match[4], 10) : 12;
+            const minute = match[5] ? parseInt(match[5], 10) : 0;
+            
+            const newDateObj = new Date(year, month, day, hour, minute, 0);
+
+            // Validação de Data (Adicionado para evitar erros)
+            if (isNaN(newDateObj.getTime()) || newDateObj.getMonth() !== month) { alert("Data inexistente."); return; }
+
+            const itemIndex = fullData.findIndex(i => String(i.wo) === String(currentEditingId));
             if(itemIndex > -1) {
-                // Atualiza Propriedades
                 fullData[itemIndex].date = newDateStr;
                 fullData[itemIndex].rawDate = newDateObj;
                 fullData[itemIndex].desc = newDesc;
-                
-                // Se for WO normal (não evento), atualiza campos extras
+                // NOVO: Salvar campo adicional diretamente no objeto
+                fullData[itemIndex].additionalDesc = newAdditionalDesc;
+
                 if(!fullData[itemIndex].type || fullData[itemIndex].type === 'wo') {
                     fullData[itemIndex].cause = newType;
                     fullData[itemIndex].activityCode = newActCode;
                 }
-
-                // Se o ID (WO) mudou, precisamos migrar referências
                 if(newWO !== currentEditingId) {
-                    // Migrar Estrelas
-                    if(starredWOs.has(currentEditingId)) {
-                        starredWOs.delete(currentEditingId);
-                        starredWOs.add(newWO);
-                        localStorage.setItem(STORAGE_KEY_STARRED, JSON.stringify([...starredWOs]));
-                    }
-                    // Migrar Ocultos
-                    if(hiddenWOs.has(currentEditingId)) {
-                        hiddenWOs.delete(currentEditingId);
-                        hiddenWOs.add(newWO);
-                        localStorage.setItem(STORAGE_KEY_HIDDEN, JSON.stringify([...hiddenWOs]));
-                    }
-                    // Migrar Anexos Antigos (Se existirem no ID antigo)
+                    if(starredWOs.has(currentEditingId)) { starredWOs.delete(currentEditingId); starredWOs.add(newWO); localStorage.setItem(STORAGE_KEY_STARRED, JSON.stringify([...starredWOs])); }
+                    if(hiddenWOs.has(currentEditingId)) { hiddenWOs.delete(currentEditingId); hiddenWOs.add(newWO); localStorage.setItem(STORAGE_KEY_HIDDEN, JSON.stringify([...hiddenWOs])); }
                     const oldKey = `annex_wo_${currentEditingId}`;
                     const oldAnnex = localStorage.getItem(oldKey);
-                    if(oldAnnex) {
-                        localStorage.setItem(`annex_wo_${newWO}`, oldAnnex);
-                        localStorage.removeItem(oldKey);
-                    }
-
-                    // Atualiza ID no objeto
+                    if(oldAnnex) { localStorage.setItem(`annex_wo_${newWO}`, oldAnnex); localStorage.removeItem(oldKey); }
                     fullData[itemIndex].wo = newWO;
-                    currentEditingId = newWO; // Atualiza referência atual
+                    currentEditingId = newWO; 
                 }
             }
-
-            // Salvar Anexos com a chave correta (nova ou velha)
-            // Se tiver código de atividade, usa ele, senão usa o WO
             const finalKey = newActCode ? `annex_act_${newActCode}` : `annex_wo_${newWO}`;
             localStorage.setItem(finalKey, JSON.stringify(annexData));
-
-            // Salvar Tudo
             saveMainDataToStorage(fullData, { subtitle: document.getElementById('reportDateSubtitle').innerText });
             
             const status = document.getElementById('saveStatus');
             status.style.opacity = '1';
-            setTimeout(() => { 
-                status.style.opacity = '0';
-                // Opcional: fechar modal ou apenas atualizar timeline no fundo
-                applyFiltersAndRender();
-            }, 1000);
+            setTimeout(() => { status.style.opacity = '0'; applyFiltersAndRender(); }, 1000);
         }
 
         function toggleChart() {
@@ -1528,7 +1498,7 @@
             notes[STORAGE_KEY_STARRED] = JSON.stringify([...starredWOs]);
             notes[STORAGE_KEY_HIDDEN] = JSON.stringify([...hiddenWOs]);
             
-            const settings = { currentFilter, isStarredFilter, isHiddenFilter, sortOrder };
+            const settings = { currentFilter, isStarredFilter, isHiddenFilter, sortOrder, isHorizontalMode };
             const title = document.getElementById('appTitle').innerText.trim() || "Cronograma_Manutencao";
             const projectData = { timestamp: new Date().toISOString(), data: fullData, notes: notes, settings: settings, meta: { subtitle: document.getElementById('reportDateSubtitle').innerText, title: title } };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData));
@@ -1542,6 +1512,15 @@
             const reader = new FileReader();
             reader.onload = function(e) { try { loadProjectData(JSON.parse(e.target.result)); alert("Importado com sucesso!"); } catch (err) { alert("Erro ao importar."); } input.value = ''; };
             reader.readAsText(file);
+        }
+
+        // Toggle Controls Logic
+        function toggleControls() {
+            const row = document.getElementById('controlsRow');
+            const icon = document.getElementById('toggleIcon');
+            row.classList.toggle('hidden');
+            const isHidden = row.classList.contains('hidden');
+            icon.innerText = isHidden ? '▼' : '▲';
         }
 
         document.getElementById('detailModal').addEventListener('click', function(e) { if (e.target === this) closeDetailModal(); });
