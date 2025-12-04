@@ -292,6 +292,23 @@
         .timeline-gap::after { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; margin-left: -1px; border-left: 2px dashed #cbd5e1; z-index: 2; }
         .gap-label { background-color: #f1f5f9; color: #94a3b8; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; border: 1px solid #e2e8f0; z-index: 10; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
 
+        /* Intra-Day Gap (Mesmo dia, linha leve) */
+        .intra-day-gap {
+            position: relative;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 20px;
+            z-index: 5;
+        }
+        .intra-day-gap::before {
+            content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 10px; margin-left: -5px; background-color: var(--bg-color); z-index: 1;
+        }
+        .intra-day-gap::after {
+            content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; margin-left: -1px; border-left: 2px dotted #cbd5e1; opacity: 0.6; z-index: 2;
+        }
+
         .time-separator { text-align: center; position: relative; z-index: 10; margin: 10px 0; clear: both; }
         .time-badge { background-color: #94a3b8; color: white; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; }
 
@@ -365,7 +382,16 @@
         /* Modal */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center; }
         .modal-overlay.active { display: flex; }
-        .modal-window { background: white; width: 90%; max-width: 700px; max-height: 80vh; overflow-y: auto; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        
+        /* Modal Window com Altura Fixa para preencher bem a tela e destacar o textarea */
+        .modal-window { 
+            background: white; width: 90%; max-width: 700px; 
+            height: 80vh; /* Altura fixa grande */
+            border-radius: 10px; padding: 20px; 
+            display: flex; flex-direction: column; 
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); 
+        }
+        
         .modal-header { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
         .modal-footer { margin-top: 15px; display: flex; justify-content: space-between; align-items: center; }
         .save-btn { background-color: var(--primary-color); color: white; border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer; }
@@ -373,11 +399,67 @@
         .delete-btn:hover { background-color: #fca5a5; color: #7f1d1d; }
         .close-modal { border: none; background: none; font-size: 1.5rem; cursor: pointer; color: #64748b; }
         
-        .modal-fields-row { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
+        .modal-fields-row { display: flex; gap: 10px; margin-bottom: 10px; flex-wrap: wrap; }
         .field-group { flex: 1; min-width: 120px; }
         .field-group label { display: block; font-size: 0.75rem; color: var(--secondary-color); margin-bottom: 4px; font-weight: bold; }
         .modal-input { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; }
-        .detail-textarea { flex-grow: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; resize: none; font-size: 1rem; min-height: 100px; }
+        
+        /* Área de Texto Expansível */
+        .detail-textarea { 
+            flex-grow: 1; /* Ocupa todo o espaço restante */
+            width: 100%;
+            padding: 15px; 
+            border: 1px solid #cbd5e1; 
+            border-radius: 6px; 
+            resize: none; 
+            font-size: 1rem; 
+            line-height: 1.5;
+            font-family: inherit;
+        }
+        
+        /* Estilos do Acordeão (Collapsible) */
+        details.collapsible-section {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            background-color: #f8fafc;
+            flex-shrink: 0; /* Não encolhe, mantem tamanho do conteudo */
+        }
+
+        details.collapsible-section summary {
+            padding: 10px 15px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85rem;
+            color: var(--secondary-color);
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            outline: none;
+        }
+        
+        details.collapsible-section summary::-webkit-details-marker { display: none; }
+
+        details.collapsible-section summary::after {
+            content: '+'; 
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        details.collapsible-section[open] summary::after {
+            content: '-';
+        }
+
+        details.collapsible-section[open] {
+            border-color: var(--primary-color);
+            background-color: white;
+        }
+
+        .collapsible-content {
+            padding: 15px;
+            border-top: 1px solid #e2e8f0;
+        }
 
         .tab-group { display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
         .tab-btn { flex: 1; padding: 8px; border: none; background: #f1f5f9; border-radius: 6px; cursor: pointer; color: #64748b; font-weight: 600; }
@@ -389,6 +471,8 @@
             .timeline::after { left: 20px; }
             .timeline-gap::before { left: 20px; } 
             .timeline-gap::after { left: 20px; }
+            .intra-day-gap::before { left: 20px; }
+            .intra-day-gap::after { left: 20px; }
             .container { width: 100%; padding-left: 45px; padding-right: 10px; text-align: left; }
             .left, .right { left: 0; }
             .left .wo-meta, .right .wo-meta { justify-content: flex-start; }
@@ -468,33 +552,82 @@
         <!-- JS Preenche aqui -->
     </div>
 
-    <!-- Modal Detalhamento -->
+    <!-- Modal Detalhamento e Edição (REORGANIZADO) -->
     <div class="modal-overlay" id="detailModal">
         <div class="modal-window">
             <div class="modal-header">
                 <div>
-                    <h3 id="modalWoTitle" style="color: var(--primary-color)">WO</h3>
+                    <h3 id="modalWoTitle" style="color: var(--primary-color); font-size:1.1rem;">Detalhes da Atividade</h3>
                     <small id="modalActivityInfo" style="color: #64748b;"></small>
                 </div>
                 <button class="close-modal" onclick="closeDetailModal()">&times;</button>
             </div>
             
-            <div class="modal-fields-row">
-                <div class="field-group">
-                    <label>Periodicidade</label>
-                    <input type="text" id="detailPeriodicity" class="modal-input" placeholder="ex: Semanal">
-                </div>
-                <div class="field-group">
-                    <label>Recurso</label>
-                    <input type="text" id="detailResource" class="modal-input" placeholder="ex: Eletricista">
-                </div>
-                <div class="field-group">
-                    <label>HH</label>
-                    <input type="text" id="detailHH" class="modal-input" placeholder="ex: 2.5">
-                </div>
-            </div>
+            <!-- ACORDEÃO: Dados de Edição (Recolhido por padrão) -->
+            <details class="collapsible-section">
+                <summary>📝 Editar Dados & Planejamento</summary>
+                <div class="collapsible-content">
+                    
+                    <!-- Dados Principais -->
+                    <div style="margin-bottom: 10px; font-size: 0.8rem; font-weight: bold; color: var(--primary-color); border-bottom: 1px solid #e2e8f0;">Dados Principais</div>
+                    
+                    <div class="modal-fields-row">
+                        <div class="field-group">
+                            <label>Data (DD/MM/AAAA)</label>
+                            <input type="text" id="editDate" class="modal-input" placeholder="DD/MM/AAAA" maxlength="10" oninput="handleDateInput(this)" inputmode="numeric">
+                        </div>
+                        <div class="field-group">
+                            <label>WO (ID)</label>
+                            <input type="text" id="editWO" class="modal-input">
+                        </div>
+                    </div>
+                    
+                    <div class="modal-fields-row">
+                        <div class="field-group">
+                            <label>Tipo</label>
+                            <select id="editType" class="modal-input">
+                                <option value="PREVENTIVA">Preventiva</option>
+                                <option value="CORRETIVA">Corretiva</option>
+                                <option value="OUTROS">Outros</option>
+                            </select>
+                        </div>
+                        <div class="field-group">
+                            <label>Cód. Atividade</label>
+                            <input type="text" id="editActCode" class="modal-input">
+                        </div>
+                    </div>
 
-            <textarea id="detailText" class="detail-textarea" placeholder="Digite o detalhamento técnico..."></textarea>
+                    <div class="field-group" style="margin-bottom:15px;">
+                        <label>Descrição Curta (Título)</label>
+                        <input type="text" id="editDesc" class="modal-input">
+                    </div>
+
+                    <!-- Dados Planejamento -->
+                    <div style="margin-bottom: 10px; font-size: 0.8rem; font-weight: bold; color: var(--primary-color); border-bottom: 1px solid #e2e8f0;">Planejamento</div>
+                    
+                    <div class="modal-fields-row">
+                        <div class="field-group">
+                            <label>Periodicidade</label>
+                            <input type="text" id="detailPeriodicity" class="modal-input" placeholder="ex: Semanal">
+                        </div>
+                        <div class="field-group">
+                            <label>Recurso</label>
+                            <input type="text" id="detailResource" class="modal-input" placeholder="ex: Eletricista">
+                        </div>
+                        <div class="field-group">
+                            <label>HH</label>
+                            <input type="text" id="detailHH" class="modal-input" placeholder="ex: 2.5">
+                        </div>
+                    </div>
+
+                </div>
+            </details>
+
+            <!-- Área de Texto Principal (Grande) -->
+            <div class="field-group" style="display: flex; flex-direction: column; flex-grow: 1; margin-bottom: 0;">
+                <label style="font-size: 0.9rem; color: var(--text-color); font-weight: bold; margin-bottom: 8px;">Detalhes Técnicos / Observações</label>
+                <textarea id="detailText" class="detail-textarea" placeholder="Digite aqui o detalhamento técnico, histórico ou observações importantes..."></textarea>
+            </div>
             
             <div class="modal-footer">
                 <button class="delete-btn" onclick="deleteCurrentItem()">🗑️ Excluir</button>
@@ -508,7 +641,7 @@
 
     <!-- Modal de Criação (Novo) -->
     <div class="modal-overlay" id="createModal">
-        <div class="modal-window" style="max-width: 500px;">
+        <div class="modal-window" style="max-width: 500px; height: auto; max-height: 90vh;">
             <div class="modal-header">
                 <h3 style="color: var(--text-color)">Adicionar Novo Item</h3>
                 <button class="close-modal" onclick="closeCreateModal()">&times;</button>
@@ -521,8 +654,8 @@
 
             <div class="modal-fields-row">
                 <div class="field-group">
-                    <label>Data*</label>
-                    <input type="date" id="newDate" class="modal-input">
+                    <label>Data (DD/MM/AAAA)*</label>
+                    <input type="text" id="newDate" class="modal-input" placeholder="DD/MM/AAAA" maxlength="10" oninput="handleDateInput(this)" inputmode="numeric">
                 </div>
             </div>
 
@@ -576,7 +709,7 @@
         let sortOrder = 'asc'; 
         let currentActivityFilter = null;
         
-        let currentEditingId = null;
+        let currentEditingId = null; // Stores original WO ID for comparison/update
         let currentActivityCode = null;
         let createType = 'wo'; // 'wo' ou 'event'
 
@@ -618,6 +751,20 @@
             }
         }
 
+        // --- Date Mask Logic ---
+        function handleDateInput(input) {
+            let v = input.value.replace(/\D/g,''); // Remove tudo que não é dígito
+            if (v.length > 8) v = v.substring(0,8);
+            
+            if (v.length >= 5) {
+                input.value = v.substring(0,2) + '/' + v.substring(2,4) + '/' + v.substring(4);
+            } else if (v.length >= 3) {
+                input.value = v.substring(0,2) + '/' + v.substring(2);
+            } else {
+                input.value = v;
+            }
+        }
+
         function setupEventListeners() {
             document.addEventListener('keydown', (e) => {
                 if(e.key === 'Escape') { closeDetailModal(); closeCreateModal(); }
@@ -631,6 +778,12 @@
             const tooltip = document.getElementById('cursorTooltip');
             
             document.addEventListener('mousemove', (e) => {
+                // VERIFICAÇÃO DE MODAL: Se houver modal aberto, esconde tooltip
+                if (document.querySelector('.modal-overlay.active')) {
+                    tooltip.style.display = 'none';
+                    return;
+                }
+
                 if (filteredData.length === 0) { tooltip.style.display = 'none'; return; }
                 const rect = timeline.getBoundingClientRect();
                 const isInTimeline = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
@@ -664,6 +817,7 @@
             });
         }
 
+        // --- Drag & Drop Logic ---
         function setupDragAndDrop() {
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                 document.body.addEventListener(eventName, preventDefaults, false);
@@ -729,6 +883,7 @@
             }
         }
 
+        // --- Helpers ---
         function stringToColor(str) {
             if(!str) return '#e2e8f0';
             let hash = 0;
@@ -750,6 +905,7 @@
             return String(dateVal);
         }
 
+        // --- Core Data Logic ---
         function processExcelData(rows) {
             const dataRows = rows.slice(1);
             fullData = [];
@@ -837,6 +993,7 @@
             if(isChartVisible) updateChart();
         }
 
+        // --- Render Logic ---
         function applyFiltersAndRender() {
             filteredData = fullData.filter(item => {
                 if (hiddenWOs.has(item.wo) && isHiddenFilter) return false;
@@ -887,19 +1044,28 @@
                 let marginTop = 0;
                 if (lastDate) {
                     const daysDiff = getDaysDiff(itemDate, lastDate);
-                    if (daysDiff > 1) {
+                    
+                    if (daysDiff >= 1) { 
                         const gapDiv = document.createElement('div');
                         gapDiv.className = 'timeline-gap';
-                        const effectiveGap = Math.min(daysDiff, 60); 
-                        gapDiv.style.height = `${effectiveGap * PIXELS_PER_DAY}px`;
                         
-                        const label = document.createElement('span');
-                        label.className = 'gap-label';
-                        label.innerText = `${daysDiff - 1} dia(s) sem atividade`;
-                        gapDiv.appendChild(label);
-                        container.appendChild(gapDiv);
-                    } else if (daysDiff === 1) {
-                        marginTop = PIXELS_PER_DAY;
+                        if (daysDiff > 1) {
+                            const effectiveGap = Math.min(daysDiff, 60); 
+                            gapDiv.style.height = `${effectiveGap * PIXELS_PER_DAY}px`;
+                            const label = document.createElement('span');
+                            label.className = 'gap-label';
+                            label.innerText = `${daysDiff - 1} dia(s) sem atividade`;
+                            gapDiv.appendChild(label);
+                            container.appendChild(gapDiv);
+                        } else {
+                            gapDiv.style.height = `${PIXELS_PER_DAY}px`;
+                            container.appendChild(gapDiv);
+                        }
+                    } else {
+                        // Intra-day gap
+                        const intraGap = document.createElement('div');
+                        intraGap.className = 'intra-day-gap';
+                        container.appendChild(intraGap);
                     }
                 }
 
@@ -913,7 +1079,7 @@
                     if (marginTop > 0) eventDiv.style.marginTop = `${marginTop}px`;
                     
                     eventDiv.innerHTML = `
-                        <div class="event-content ${hiddenClass}" title="${item.desc}" onclick="openDetailModal('${item.wo}', '', '${item.desc}')">
+                        <div class="event-content ${hiddenClass}" title="${item.desc}" onclick="openDetailModal('${item.wo}', '', '${item.desc.replace(/'/g, "\\'")}')">
                             <span class="event-date">${item.date}</span>
                             ${item.desc}
                         </div>
@@ -927,16 +1093,14 @@
                     const safeDesc = item.desc.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                     
                     const isStarred = starredWOs.has(item.wo);
-                    // Ícone de Estrela SVG
                     const starIcon = isStarred 
                         ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`
                         : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
                     const starClass = isStarred ? 'starred' : '';
 
-                    // Ícone de Olho SVG
                     const hideIcon = isHidden 
                         ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`
-                        : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+                        : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8-11-8-11-8-11-8-11-8-11-8-11-8-11-8-11-8-11-8-11-8-11-8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
                     
                     const hideBtnClass = isHidden ? 'hidden-active' : '';
 
@@ -979,20 +1143,17 @@
             });
         }
 
-        // Função para alternar a visibilidade da barra de controles
-        function toggleControls() {
-            const row = document.getElementById('controlsRow');
-            const icon = document.getElementById('toggleIcon');
-            row.classList.toggle('hidden');
-            
-            // Muda o ícone dependendo do estado
-            const isHidden = row.classList.contains('hidden');
-            icon.innerText = isHidden ? '▶' : '▲';
-        }
-
+        // --- Creation Logic ---
         function openCreateModal() {
             document.getElementById('createModal').classList.add('active');
-            document.getElementById('newDate').valueAsDate = new Date();
+            
+            // Set Today's Date formatted as DD/MM/YYYY
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0'); // Jan is 0
+            const yyyy = today.getFullYear();
+            
+            document.getElementById('newDate').value = `${dd}/${mm}/${yyyy}`;
             document.getElementById('newWO').value = '';
             document.getElementById('newAsset').value = '';
             document.getElementById('newActCode').value = '';
@@ -1022,8 +1183,26 @@
             const desc = document.getElementById('newDesc').value;
             
             if(!dateVal || !desc) { alert("Preencha a data e a descrição."); return; }
+            
+            // Validate Date Format DD/MM/YYYY
+            const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+            if (!dateRegex.test(dateVal)) {
+                alert("Data inválida. Use o formato DD/MM/AAAA.");
+                return;
+            }
 
-            const dateObj = new Date(dateVal + 'T12:00:00'); 
+            const parts = dateVal.split('/');
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1; 
+            const year = parseInt(parts[2], 10);
+            
+            const dateObj = new Date(year, month, day, 12, 0, 0); 
+            
+            if (isNaN(dateObj.getTime()) || dateObj.getMonth() !== month) {
+                 alert("Data inexistente.");
+                 return;
+            }
+
             const formattedDate = dateObj.toLocaleDateString('pt-BR');
 
             const newItem = {
@@ -1050,6 +1229,7 @@
             alert("Item adicionado!");
         }
 
+        // --- Interaction Logic ---
         function toggleStar(wo, event) {
             event.stopPropagation();
             if(starredWOs.has(wo)) starredWOs.delete(wo);
@@ -1106,6 +1286,17 @@
             isHiddenFilter = !isHiddenFilter;
             btn.classList.toggle('active', isHiddenFilter);
             applyFiltersAndRender();
+        }
+
+        // Função para alternar a visibilidade da barra de controles
+        function toggleControls() {
+            const row = document.getElementById('controlsRow');
+            const icon = document.getElementById('toggleIcon');
+            row.classList.toggle('hidden');
+            
+            // Muda o ícone dependendo do estado
+            const isHidden = row.classList.contains('hidden');
+            icon.innerText = isHidden ? '▶' : '▲';
         }
 
         function toggleSort(btn) {
@@ -1168,18 +1359,42 @@
             else { alertEl.style.display = 'none'; }
         }
 
+        // --- Modal Detalhes & Edição ---
         function openDetailModal(wo, actCode, desc) {
             const modal = document.getElementById('detailModal');
-            currentEditingId = wo;
+            currentEditingId = wo; // Guardamos o ID Original
             currentActivityCode = actCode === "undefined" || actCode === "" ? null : actCode;
-            document.getElementById('modalWoTitle').innerText = wo.startsWith('EVENT') ? 'Evento de Linha' : `WO: ${wo}`;
             const infoEl = document.getElementById('modalActivityInfo');
-            if(wo.startsWith('EVENT')) {
-                infoEl.innerHTML = '';
-            } else {
-                infoEl.innerHTML = currentActivityCode ? `Vínculo: Código <b>${currentActivityCode}</b>` : `Vínculo: Exclusivo WO`;
-            }
             
+            // Encontrar o item no fullData para popular os campos de edição
+            const item = fullData.find(i => i.wo === wo);
+            
+            if (item) {
+                document.getElementById('editDate').value = item.date;
+                document.getElementById('editWO').value = item.wo;
+                document.getElementById('editDesc').value = item.desc;
+                document.getElementById('editActCode').value = item.activityCode || "";
+                
+                // Tipo (Tenta mapear para os valores do select)
+                let typeVal = "OUTROS";
+                const c = (item.cause || "").toUpperCase();
+                if(c.includes("PREVENTIVA")) typeVal = "PREVENTIVA";
+                else if(c.includes("CORRETIVA")) typeVal = "CORRETIVA";
+                document.getElementById('editType').value = typeVal;
+                
+                if(wo.startsWith('EVENT')) {
+                    // Ajustes visuais para eventos
+                    infoEl.innerHTML = 'Evento';
+                    document.getElementById('editActCode').disabled = true;
+                    document.getElementById('editType').disabled = true;
+                } else {
+                    infoEl.innerHTML = currentActivityCode ? `Vinculado ao Código <b>${currentActivityCode}</b>` : `Sem Vínculo de Grupo`;
+                    document.getElementById('editActCode').disabled = false;
+                    document.getElementById('editType').disabled = false;
+                }
+            }
+
+            // Carregar anexos
             const key = currentActivityCode ? `annex_act_${currentActivityCode}` : `annex_wo_${wo}`;
             const savedRaw = localStorage.getItem(key);
             let data = { text: "", periodicity: "", resource: "", hh: "" };
@@ -1189,6 +1404,7 @@
             document.getElementById('detailPeriodicity').value = data.periodicity;
             document.getElementById('detailResource').value = data.resource;
             document.getElementById('detailHH').value = data.hh;
+            
             document.getElementById('saveStatus').style.opacity = '0';
             modal.classList.add('active');
         }
@@ -1196,17 +1412,88 @@
         function closeDetailModal() { document.getElementById('detailModal').classList.remove('active'); }
 
         function saveDetails() {
-            const data = {
+            // 1. Salvar Anexos (LocalStorage)
+            const annexData = {
                 text: document.getElementById('detailText').value,
                 periodicity: document.getElementById('detailPeriodicity').value,
                 resource: document.getElementById('detailResource').value,
                 hh: document.getElementById('detailHH').value
             };
-            const key = currentActivityCode ? `annex_act_${currentActivityCode}` : `annex_wo_${currentEditingId}`;
-            localStorage.setItem(key, JSON.stringify(data));
+            
+            // 2. Obter Novos Valores de Edição
+            const newDateStr = document.getElementById('editDate').value;
+            const newWO = document.getElementById('editWO').value;
+            const newDesc = document.getElementById('editDesc').value;
+            const newType = document.getElementById('editType').value;
+            const newActCode = document.getElementById('editActCode').value;
+
+            // Validar Data
+            const dateRegex = /^(\d{2})\/(\d{2})\/(\d{4})$/;
+            if (!dateRegex.test(newDateStr)) { alert("Data inválida (DD/MM/AAAA)"); return; }
+            
+            const parts = newDateStr.split('/');
+            const day = parseInt(parts[0], 10);
+            const month = parseInt(parts[1], 10) - 1; 
+            const year = parseInt(parts[2], 10);
+            const newDateObj = new Date(year, month, day, 12, 0, 0);
+
+            // 3. Atualizar Item no fullData
+            const itemIndex = fullData.findIndex(i => i.wo === currentEditingId);
+            if(itemIndex > -1) {
+                // Atualiza Propriedades
+                fullData[itemIndex].date = newDateStr;
+                fullData[itemIndex].rawDate = newDateObj;
+                fullData[itemIndex].desc = newDesc;
+                
+                // Se for WO normal (não evento), atualiza campos extras
+                if(!fullData[itemIndex].type || fullData[itemIndex].type === 'wo') {
+                    fullData[itemIndex].cause = newType;
+                    fullData[itemIndex].activityCode = newActCode;
+                }
+
+                // Se o ID (WO) mudou, precisamos migrar referências
+                if(newWO !== currentEditingId) {
+                    // Migrar Estrelas
+                    if(starredWOs.has(currentEditingId)) {
+                        starredWOs.delete(currentEditingId);
+                        starredWOs.add(newWO);
+                        localStorage.setItem(STORAGE_KEY_STARRED, JSON.stringify([...starredWOs]));
+                    }
+                    // Migrar Ocultos
+                    if(hiddenWOs.has(currentEditingId)) {
+                        hiddenWOs.delete(currentEditingId);
+                        hiddenWOs.add(newWO);
+                        localStorage.setItem(STORAGE_KEY_HIDDEN, JSON.stringify([...hiddenWOs]));
+                    }
+                    // Migrar Anexos Antigos (Se existirem no ID antigo)
+                    const oldKey = `annex_wo_${currentEditingId}`;
+                    const oldAnnex = localStorage.getItem(oldKey);
+                    if(oldAnnex) {
+                        localStorage.setItem(`annex_wo_${newWO}`, oldAnnex);
+                        localStorage.removeItem(oldKey);
+                    }
+
+                    // Atualiza ID no objeto
+                    fullData[itemIndex].wo = newWO;
+                    currentEditingId = newWO; // Atualiza referência atual
+                }
+            }
+
+            // Salvar Anexos com a chave correta (nova ou velha)
+            // Se tiver código de atividade, usa ele, senão usa o WO
+            const finalKey = newActCode ? `annex_act_${newActCode}` : `annex_wo_${newWO}`;
+            localStorage.setItem(finalKey, JSON.stringify(annexData));
+
+            // Salvar Tudo
+            saveMainDataToStorage(fullData, { subtitle: document.getElementById('reportDateSubtitle').innerText });
+            
             const status = document.getElementById('saveStatus');
             status.style.opacity = '1';
-            setTimeout(() => status.style.opacity = '0', 2000);
+            setTimeout(() => { 
+                status.style.opacity = '0';
+                // Opcional: fechar modal ou apenas atualizar timeline no fundo
+                applyFiltersAndRender();
+            }, 1000);
         }
 
         function toggleChart() {
