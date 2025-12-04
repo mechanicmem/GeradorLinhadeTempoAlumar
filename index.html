@@ -23,10 +23,39 @@
             --danger-color: #ef4444;
             --success-color: #16a34a;
             --warning-color: #f59e0b;
+            --event-bg: #e2e8f0;
             --star-color: #eab308;
+            --hide-color: #94a3b8;
             --ruler-color: #cbd5e1;
-            /* Escala: 40px visualmente representa 1 dia */
+            /* Escala Fixa: 40px visualmente representa 1 dia */
             --pixels-per-day: 40px; 
+        }
+
+        /* Botão Discreto para Esconder Filtros */
+        .btn-toggle-filters {
+            background: none;
+            border: none;
+            color: #94a3b8; /* Cinza discreto */
+            font-size: 0.75rem;
+            cursor: pointer;
+            padding: 2px 12px; /* Padding reduzido verticalmente */
+            margin: 0; /* Sem margens externas */
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            border-radius: 0 0 15px 15px; /* Bordas arredondadas apenas em baixo para parecer uma aba */
+            transition: all 0.2s;
+            font-weight: 600;
+            background-color: rgba(248, 250, 252, 0.8); /* Fundo sutil para conectar visualmente */
+        }
+        .btn-toggle-filters:hover {
+            background-color: #e2e8f0;
+            color: var(--text-color);
+        }
+        
+        /* Classe utilitária para esconder */
+        .controls-row.hidden {
+            display: none !important;
         }
 
         * {
@@ -40,7 +69,27 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             padding: 10px;
+            min-height: 100vh;
+            position: relative;
         }
+
+        /* --- Drop Zone Overlay --- */
+        #dropZoneOverlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(37, 99, 235, 0.95);
+            z-index: 9999; 
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            font-size: 2rem;
+            font-weight: bold;
+            border: 8px dashed white;
+            pointer-events: none; 
+        }
+        body.dragging #dropZoneOverlay { display: flex; }
 
         /* --- Header --- */
         header {
@@ -65,7 +114,6 @@
             margin: 0;
         }
 
-        /* Estilo para o título editável */
         #appTitle {
             cursor: text;
             border-bottom: 1px dashed transparent;
@@ -118,23 +166,19 @@
         .btn-clear:hover { background-color: #fef2f2; }
         .btn-chart { background-color: #8b5cf6; color: white; border-color: #7c3aed; }
         .btn-chart:hover { background-color: #7c3aed; }
+        .btn-add { background-color: var(--text-color); color: white; border-color: var(--text-color); }
+        .btn-add:hover { background-color: #334155; }
 
-        /* --- Chart Section (Expandable) --- */
+        /* --- Chart Section --- */
         #chartContainerWrapper {
-            display: none; /* Oculto por padrão */
+            display: none; 
             margin-top: 20px;
             padding-top: 20px;
             border-top: 1px solid #e2e8f0;
             animation: slideDown 0.3s ease-out;
         }
-        
         @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .chart-container {
-            position: relative;
-            height: 300px;
-            width: 100%;
-        }
+        .chart-container { position: relative; height: 300px; width: 100%; }
 
         /* --- Alertas --- */
         .pending-alert {
@@ -157,7 +201,7 @@
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 10px;
+            gap: 0px; /* Gap zerado para colar os elementos */
             margin-bottom: 20px;
         }
 
@@ -171,50 +215,8 @@
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
             flex-wrap: wrap;
             justify-content: center;
+            z-index: 2; /* Fica acima do botão toggle */
         }
-
-        .toggle-label {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
-            color: var(--secondary-color);
-            font-weight: 600;
-            border-right: 1px solid #cbd5e1;
-            padding-right: 15px;
-            margin-right: 5px;
-            cursor: pointer;
-        }
-        .toggle-label:nth-last-child(5) { border-right: 1px solid #cbd5e1; }
-
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 36px;
-            height: 20px;
-        }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #cbd5e1;
-            transition: .4s;
-            border-radius: 20px;
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 14px;
-            width: 14px;
-            left: 3px;
-            bottom: 3px;
-            background-color: white;
-            transition: .4s;
-            border-radius: 50%;
-        }
-        input:checked + .slider { background-color: var(--primary-color); }
-        input:checked + .slider:before { transform: translateX(16px); }
 
         .active-filter-chip {
             display: none;
@@ -226,6 +228,7 @@
             font-size: 0.85rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             animation: fadeIn 0.3s ease;
+            margin-bottom: 5px;
         }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
         .active-filter-chip button { background: none; border: none; color: white; margin-left: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; }
@@ -246,21 +249,13 @@
         .btn-filter.active { background: white; color: var(--primary-color); box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
         .btn-sort { color: var(--text-color); }
         
-        /* Estilo Específico para o Filtro de Estrela */
-        .btn-filter-star {
-            color: #b45309; 
-            border: 1px solid #fcd34d;
-            background-color: #fffbeb;
-        }
-        .btn-filter-star:hover {
-            background-color: #fef3c7;
-        }
-        .btn-filter-star.active {
-            background-color: var(--star-color); 
-            color: white;
-            border-color: var(--star-color);
-            box-shadow: 0 2px 4px rgba(234, 179, 8, 0.4);
-        }
+        .btn-filter-star { color: #b45309; border: 1px solid #fcd34d; background-color: #fffbeb; }
+        .btn-filter-star:hover { background-color: #fef3c7; }
+        .btn-filter-star.active { background-color: var(--star-color); color: white; border-color: var(--star-color); box-shadow: 0 2px 4px rgba(234, 179, 8, 0.4); }
+
+        .btn-filter-hide { color: #475569; border: 1px solid #cbd5e1; background-color: #f1f5f9; }
+        .btn-filter-hide:hover { background-color: #e2e8f0; }
+        .btn-filter-hide.active { background-color: #64748b; color: white; border-color: #475569; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
 
         /* --- Timeline --- */
         .timeline {
@@ -269,166 +264,147 @@
             margin: 0 auto;
             padding-top: 10px;
             padding-bottom: 50px;
+            background-image: linear-gradient(#e2e8f0 1px, transparent 1px);
+            background-size: 100% var(--pixels-per-day);
         }
 
         .timeline::after {
             content: '';
             position: absolute;
-            width: 2px;
-            background-color: #cbd5e1;
+            width: 4px; 
+            background-color: transparent;
+            background-image: linear-gradient(to bottom, var(--ruler-color) 2px, transparent 2px);
+            background-size: 100% var(--pixels-per-day); 
+            background-repeat: repeat-y;
             top: 0; bottom: 0; left: 50%;
-            margin-left: -1px;
+            margin-left: -2px;
             transition: all 0.3s ease;
             z-index: 0;
         }
 
-        /* Tooltip de Data Flutuante */
         #cursorTooltip {
-            position: fixed;
-            background: rgba(30, 41, 59, 0.9);
-            color: white;
-            padding: 4px 10px;
-            border-radius: 4px;
-            font-size: 0.75rem;
-            pointer-events: none; /* Não interfere no clique */
-            z-index: 9999;
-            display: none;
-            transform: translate(15px, 15px); /* Offset do mouse */
-            white-space: nowrap;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            position: fixed; background: rgba(30, 41, 59, 0.9); color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; pointer-events: none; z-index: 9999; display: none; transform: translate(15px, 15px); white-space: nowrap; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
-        /* --- ESTILOS DE GAP --- */
-        .timeline-gap {
-            position: relative;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 5;
-        }
-        .timeline-gap::before {
-            content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 10px; margin-left: -5px; background-color: var(--bg-color); z-index: 1;
-        }
-        .timeline-gap::after {
-            content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; margin-left: -1px; border-left: 2px dashed #cbd5e1; z-index: 2;
-        }
-        .gap-label {
-            background-color: #f1f5f9; color: #94a3b8; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; border: 1px solid #e2e8f0; z-index: 10; box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-        }
+        /* Gaps */
+        .timeline-gap { position: relative; width: 100%; display: flex; align-items: center; justify-content: center; z-index: 5; }
+        .timeline-gap::before { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 10px; margin-left: -5px; background-color: var(--bg-color); z-index: 1; }
+        .timeline-gap::after { content: ''; position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; margin-left: -1px; border-left: 2px dashed #cbd5e1; z-index: 2; }
+        .gap-label { background-color: #f1f5f9; color: #94a3b8; padding: 4px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: bold; border: 1px solid #e2e8f0; z-index: 10; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
 
-        .timeline.proportional::after {
-            width: 4px; margin-left: -2px; background-color: transparent;
-            background-image: linear-gradient(to bottom, var(--ruler-color) 2px, transparent 2px);
-            background-size: 100% var(--pixels-per-day); background-repeat: repeat-y;
-        }
-        .timeline.proportional {
-            background-image: linear-gradient(#e2e8f0 1px, transparent 1px);
-            background-size: 100% var(--pixels-per-day);
-        }
+        .time-separator { text-align: center; position: relative; z-index: 10; margin: 10px 0; clear: both; }
+        .time-badge { background-color: #94a3b8; color: white; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; }
 
-        .time-separator { text-align: center; position: relative; z-index: 10; margin: 20px 0; clear: both; }
-        .time-badge { background-color: #94a3b8; color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
-
-        .container { padding: 0 30px 20px 30px; position: relative; width: 50%; cursor: pointer; transition: all 0.3s ease; }
-        .container::after { content: ''; position: absolute; width: 12px; height: 12px; right: -6px; background-color: white; border: 3px solid var(--primary-color); top: 20px; border-radius: 50%; z-index: 1; transition: transform 0.2s; }
+        /* WO Container */
+        .container { padding: 0 30px 8px 30px; position: relative; width: 50%; cursor: pointer; transition: all 0.3s ease; }
+        .container::after { content: ''; position: absolute; width: 10px; height: 10px; right: -5px; background-color: white; border: 2px solid var(--primary-color); top: 12px; border-radius: 50%; z-index: 1; transition: transform 0.2s; }
         .container:hover::after { transform: scale(1.3); }
         .left { left: 0; text-align: right; }
         .right { left: 50%; text-align: left; }
-        .right::after { left: -6px; }
+        .right::after { left: -5px; }
 
-        .content { padding: 15px; position: relative; border-radius: 8px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: transform 0.2s; text-align: left; border-left: 4px solid transparent; }
+        /* Conteúdo do Card */
+        .content { padding: 8px 12px; position: relative; border-radius: 8px; background: white; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: all 0.2s; text-align: left; border-left: 4px solid transparent; }
         .content:hover { transform: translateY(-2px); box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .content.preventiva { background-color: var(--preventive-bg); border-left-color: var(--preventive-border); }
         .content.corretiva { background-color: var(--corrective-bg); border-left-color: var(--corrective-border); }
         .content.outros { border-left-color: var(--warning-color); }
-
-        .date-badge { background-color: #f1f5f9; color: var(--secondary-color); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; display: inline-block; margin-bottom: 5px; }
-        .wo-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
-        .wo-title { font-size: 0.8rem; color: var(--secondary-color); font-weight: bold; display: block; }
         
-        /* Botão Estrela SUPER EVIDENTE */
-        .btn-star {
+        .content.is-hidden-item { opacity: 0.5; filter: grayscale(100%); border-style: dashed; }
+
+        /* Eventos */
+        .event-wrapper { position: relative; width: 100%; display: flex; justify-content: center; z-index: 20; padding: 0 10px; }
+        .event-content { background-color: var(--text-color); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; box-shadow: 0 3px 6px rgba(0,0,0,0.2); border: 2px solid white; text-align: center; cursor: pointer; transition: transform 0.2s; max-width: 80%; }
+        .event-content:hover { transform: scale(1.05); }
+        .event-content.is-hidden-item { opacity: 0.5; background-color: #94a3b8; }
+        .event-date { display: block; font-size: 0.65rem; opacity: 0.8; margin-bottom: 2px; }
+
+        .date-badge { background-color: #f1f5f9; color: var(--secondary-color); padding: 1px 6px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; display: inline-block; margin-bottom: 0; }
+        .wo-title-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+        .wo-title { font-size: 0.75rem; color: var(--secondary-color); font-weight: bold; display: block; margin-bottom: 0; }
+        
+        /* --- Novos Estilos de Ícones (SVG) --- */
+        .card-actions { display: flex; align-items: center; gap: 4px; }
+        
+        .btn-icon { 
             background: none; 
             border: none; 
             cursor: pointer; 
-            font-size: 2.2rem; /* Bem grande */
-            color: #cbd5e1; 
+            padding: 4px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
             transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
-            line-height: 1; 
-            padding: 0 0 0 10px;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            border-radius: 50%;
         }
-        .btn-star.starred { 
-            color: var(--star-color); 
-            text-shadow: 0 0 5px rgba(234, 179, 8, 0.6); /* Efeito de brilho */
-            transform: scale(1.1);
-        }
-        .btn-star:hover { 
-            color: #fbbf24; 
-            transform: scale(1.2);
-        }
+        .btn-icon:hover { background-color: rgba(0,0,0,0.05); transform: scale(1.1); }
+        
+        /* Tamanho padrão dos SVGs */
+        .btn-icon svg { width: 18px; height: 18px; stroke-width: 2; }
 
-        .wo-desc { font-size: 0.95rem; font-weight: 600; color: var(--text-color); line-height: 1.3; margin-bottom: 8px; }
-        .wo-meta { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+        /* Estrela */
+        .btn-star { color: #cbd5e1; }
+        .btn-star.starred { color: var(--star-color); }
+        .btn-star.starred svg { fill: var(--star-color); stroke: var(--star-color); } /* Preenche quando ativa */
+        .btn-star:hover { color: #fbbf24; }
+
+        /* Olho */
+        .btn-hide { color: #cbd5e1; }
+        .btn-hide.hidden-active { color: var(--text-color); }
+        .btn-hide:hover { color: var(--text-color); }
+
+        .wo-desc { font-size: 0.85rem; font-weight: 600; color: var(--text-color); line-height: 1.2; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .wo-meta { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
         .left .wo-meta { justify-content: flex-end; }
         .right .wo-meta { justify-content: flex-start; }
-        .tag { padding: 2px 6px; border-radius: 4px; background: white; font-size: 0.7rem; border: 1px solid #e2e8f0; color: var(--secondary-color); }
-        
-        /* Cores mais variadas para atividades */
+        .tag { padding: 1px 4px; border-radius: 4px; background: white; font-size: 0.65rem; border: 1px solid #e2e8f0; color: var(--secondary-color); }
         .tag-activity { color: #1e293b; border: none; cursor: zoom-in; transition: transform 0.1s; font-weight: 600; border: 1px solid rgba(0,0,0,0.05); }
         .tag-activity:hover { transform: scale(1.05); box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-
-        /* Compact Mode */
-        .timeline.compact .time-separator { margin: 10px 0; }
-        .timeline.compact .time-badge { padding: 2px 8px; font-size: 0.7rem; }
-        .timeline.compact .container { padding-bottom: 8px; }
-        .timeline.compact .container::after { top: 12px; width: 10px; height: 10px; right: -5px; border-width: 2px; }
-        .timeline.compact .right::after { left: -5px; }
-        .timeline.compact .content { padding: 8px 12px; }
-        .timeline.compact .wo-desc { font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; line-height: 1.2; }
-        .timeline.compact .wo-meta { margin-top: 4px; gap: 3px; }
-        .timeline.compact .tag { padding: 1px 4px; font-size: 0.65rem; }
-        .timeline.compact .wo-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
-        .timeline.compact .date-badge { margin-bottom: 0; font-size: 0.7rem; padding: 1px 6px; }
-        .timeline.compact .wo-title { margin-bottom: 0; font-size: 0.75rem; }
-        .timeline.compact .btn-star { font-size: 1.5rem; }
+        .wo-header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
 
         /* Modal */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center; }
         .modal-overlay.active { display: flex; }
-        .modal-window { background: white; width: 90%; max-width: 700px; height: 80vh; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .modal-window { background: white; width: 90%; max-width: 700px; max-height: 80vh; overflow-y: auto; border-radius: 10px; padding: 20px; display: flex; flex-direction: column; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
         .modal-header { display: flex; justify-content: space-between; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
         .modal-footer { margin-top: 15px; display: flex; justify-content: space-between; align-items: center; }
         .save-btn { background-color: var(--primary-color); color: white; border: none; padding: 8px 20px; border-radius: 5px; cursor: pointer; }
+        .delete-btn { background-color: #fee2e2; color: var(--danger-color); border: 1px solid #fecaca; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .delete-btn:hover { background-color: #fca5a5; color: #7f1d1d; }
         .close-modal { border: none; background: none; font-size: 1.5rem; cursor: pointer; color: #64748b; }
         
-        /* Modal Inputs */
         .modal-fields-row { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .field-group { flex: 1; min-width: 120px; }
         .field-group label { display: block; font-size: 0.75rem; color: var(--secondary-color); margin-bottom: 4px; font-weight: bold; }
         .modal-input { width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; }
-        .detail-textarea { flex-grow: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; resize: none; font-size: 1rem; }
+        .detail-textarea { flex-grow: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; resize: none; font-size: 1rem; min-height: 100px; }
+
+        .tab-group { display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px; }
+        .tab-btn { flex: 1; padding: 8px; border: none; background: #f1f5f9; border-radius: 6px; cursor: pointer; color: #64748b; font-weight: 600; }
+        .tab-btn.active { background: var(--primary-color); color: white; }
 
         @media screen and (max-width: 600px) {
             header { text-align: center; }
             .header-main { flex-direction: column; }
             .timeline::after { left: 20px; }
-            .timeline.proportional::after { left: 20px; margin-left: -1px; }
             .timeline-gap::before { left: 20px; } 
             .timeline-gap::after { left: 20px; }
             .container { width: 100%; padding-left: 45px; padding-right: 10px; text-align: left; }
             .left, .right { left: 0; }
             .left .wo-meta, .right .wo-meta { justify-content: flex-start; }
-            .container::after { left: 14px; }
-            .timeline.compact .container::after { left: 15px; }
+            .container::after { left: 14px; top: 12px; width: 10px; height: 10px; right: auto; border-width: 2px; }
             .controls-row { width: 100%; overflow-x: auto; justify-content: flex-start; }
             .header-actions { justify-content: center; }
-            .toggle-label { width: 100%; border-right: none; margin-bottom: 5px; justify-content: center;}
         }
     </style>
 </head>
 <body>
+
+    <!-- Drag & Drop Overlay -->
+    <div id="dropZoneOverlay">
+        <div>📂 Solte o arquivo aqui</div>
+        <p>(Excel ou JSON)</p>
+    </div>
 
     <header>
         <div class="header-main">
@@ -438,6 +414,7 @@
             </div>
             
             <div class="header-actions">
+                <button class="btn-action btn-add" onclick="openCreateModal()">➕ Adicionar</button>
                 <label class="btn-action btn-upload" title="Carregar do Excel">
                     <input type="file" id="excelFile" accept=".xlsx, .xls" />
                     📄 Excel
@@ -468,29 +445,20 @@
             <button onclick="clearActivityFilter()">×</button>
         </div>
 
-        <div class="controls-row">
-            <div class="toggle-label">
-                Compacto
-                <label class="switch">
-                    <input type="checkbox" id="compactModeSwitch" onchange="toggleCompactMode()">
-                    <span class="slider"></span>
-                </label>
-            </div>
-            <div class="toggle-label">
-                Espaço Proporcional
-                <label class="switch">
-                    <input type="checkbox" id="proportionalModeSwitch" onchange="toggleProportionalMode()">
-                    <span class="slider"></span>
-                </label>
-            </div>
+        <div class="controls-row" id="controlsRow">
             <button class="btn-filter active" onclick="setFilter('all', this)">Todas</button>
             <button class="btn-filter" onclick="setFilter('preventiva', this)">Preventivas</button>
             <button class="btn-filter" onclick="setFilter('corretiva', this)">Corretivas</button>
-            <!-- Botão de Favoritos Toggleável -->
             <button class="btn-filter btn-filter-star" id="btnFilterStar" onclick="toggleStarredFilter(this)">⭐ Favoritos</button>
+            <button class="btn-filter btn-filter-hide" id="btnFilterHide" onclick="toggleHiddenFilter(this)">🚫 Ocultar Marcados</button>
             <span style="border-left: 1px solid #ccc; margin: 0 5px;"></span>
             <button class="btn-filter btn-sort" onclick="toggleSort(this)">📅 Antigos ⬇️</button>
         </div>
+
+        <!-- Botão Discreto para Esconder Filtros (Movido para baixo e ajustado) -->
+        <button class="btn-toggle-filters" onclick="toggleControls()">
+            <span id="toggleIcon">▲</span> Filtros & Opções
+        </button>
     </div>
 
     <!-- Tooltip Flutuante -->
@@ -508,10 +476,9 @@
                     <h3 id="modalWoTitle" style="color: var(--primary-color)">WO</h3>
                     <small id="modalActivityInfo" style="color: #64748b;"></small>
                 </div>
-                <button class="close-modal" onclick="closeModal()">&times;</button>
+                <button class="close-modal" onclick="closeDetailModal()">&times;</button>
             </div>
             
-            <!-- Novos Campos -->
             <div class="modal-fields-row">
                 <div class="field-group">
                     <label>Periodicidade</label>
@@ -530,8 +497,70 @@
             <textarea id="detailText" class="detail-textarea" placeholder="Digite o detalhamento técnico..."></textarea>
             
             <div class="modal-footer">
-                <span id="saveStatus" style="color: green; font-size:0.9rem; opacity: 0; transition: opacity 0.5s;">Salvo!</span>
-                <button class="save-btn" onclick="saveDetails()">Salvar Alterações</button>
+                <button class="delete-btn" onclick="deleteCurrentItem()">🗑️ Excluir</button>
+                <div>
+                    <span id="saveStatus" style="color: green; font-size:0.9rem; opacity: 0; transition: opacity 0.5s; margin-right:10px;">Salvo!</span>
+                    <button class="save-btn" onclick="saveDetails()">Salvar Alterações</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Criação (Novo) -->
+    <div class="modal-overlay" id="createModal">
+        <div class="modal-window" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 style="color: var(--text-color)">Adicionar Novo Item</h3>
+                <button class="close-modal" onclick="closeCreateModal()">&times;</button>
+            </div>
+            
+            <div class="tab-group">
+                <button class="tab-btn active" onclick="setCreateTab('wo', this)">Ordem Serviço</button>
+                <button class="tab-btn" onclick="setCreateTab('event', this)">Evento de Linha</button>
+            </div>
+
+            <div class="modal-fields-row">
+                <div class="field-group">
+                    <label>Data*</label>
+                    <input type="date" id="newDate" class="modal-input">
+                </div>
+            </div>
+
+            <!-- Campos Específicos para WO -->
+            <div id="woFields">
+                <div class="modal-fields-row">
+                    <div class="field-group">
+                        <label>WO (Opcional)</label>
+                        <input type="text" id="newWO" class="modal-input" placeholder="123456">
+                    </div>
+                    <div class="field-group">
+                        <label>Tipo</label>
+                        <select id="newType" class="modal-input">
+                            <option value="PREVENTIVA">Preventiva</option>
+                            <option value="CORRETIVA">Corretiva</option>
+                            <option value="OUTROS">Outros</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-fields-row">
+                    <div class="field-group">
+                        <label>Ativo (Tag)</label>
+                        <input type="text" id="newAsset" class="modal-input" placeholder="TAG-01">
+                    </div>
+                    <div class="field-group">
+                        <label>Cód. Atividade</label>
+                        <input type="text" id="newActCode" class="modal-input" placeholder="XYZ">
+                    </div>
+                </div>
+            </div>
+
+            <div class="field-group">
+                <label>Descrição / Título do Evento*</label>
+                <textarea id="newDesc" class="modal-input" rows="3" placeholder="Descrição..."></textarea>
+            </div>
+
+            <div class="modal-footer">
+                <button class="save-btn" onclick="saveNewItem()">Criar</button>
             </div>
         </div>
     </div>
@@ -542,21 +571,21 @@
         let pendingCount = 0; 
         
         let currentFilter = 'all'; // all, preventiva, corretiva
-        let isStarredFilter = false; // toggle independente
+        let isStarredFilter = false; 
+        let isHiddenFilter = false; 
         let sortOrder = 'asc'; 
         let currentActivityFilter = null;
-        let isCompact = false; 
-        let isProportional = false; 
         
         let currentEditingId = null;
         let currentActivityCode = null;
+        let createType = 'wo'; // 'wo' ou 'event'
 
-        // Favoritos
         let starredWOs = new Set();
+        let hiddenWOs = new Set();
         const STORAGE_KEY_STARRED = 'timeline_starred_wos';
+        const STORAGE_KEY_HIDDEN = 'timeline_hidden_wos';
         const STORAGE_KEY_TITLE = 'timeline_app_title';
 
-        // Variáveis do Gráfico
         let myChart = null;
         let isChartVisible = false;
 
@@ -568,7 +597,6 @@
             REPORT_DATE: 0, WO: 4, DESC: 5, EXEC_DATE: 9, ACT_CODE: 11, ASSET: 13, CAUSE: 27
         };
 
-        // Paleta de Cores Pastel para texto preto
         const PASTEL_COLORS = [
             '#FFB3BA', '#FFDFBA', '#FFFFBA', '#BAFFC9', '#BAE1FF', 
             '#E2F0CB', '#FFDAC1', '#FF9AA2', '#E0BBE4', '#957DAD',
@@ -576,56 +604,38 @@
         ];
 
         window.onload = function() { 
-            // 1. Tenta carregar do localStorage
             loadSavedData(); 
-            
-            // 2. Configura listeners
             setupEventListeners();
+            setupDragAndDrop();
 
-            // 3. Verifica URL Parameter para carregar JSON remoto (GitHub Pages)
             const urlParams = new URLSearchParams(window.location.search);
             const jsonUrl = urlParams.get('data');
-            
             if (jsonUrl) {
-                console.log("Carregando JSON da URL:", jsonUrl);
                 fetch(jsonUrl)
-                    .then(response => {
-                        if(!response.ok) throw new Error("Erro de rede ao buscar JSON");
-                        return response.json();
-                    })
-                    .then(pd => {
-                        // Usa a função reutilizável para carregar os dados
-                        loadProjectData(pd);
-                        alert("Projeto carregado via Link!");
-                    })
-                    .catch(err => {
-                        console.error(err);
-                        alert("Não foi possível carregar o arquivo da URL.");
-                    });
+                    .then(r => r.ok ? r.json() : null)
+                    .then(pd => { if(pd) { loadProjectData(pd); alert("Projeto carregado via Link!"); } })
+                    .catch(e => console.error(e));
             }
         }
 
         function setupEventListeners() {
-            // Tecla ESC para fechar modal
             document.addEventListener('keydown', (e) => {
-                if(e.key === 'Escape') closeModal();
+                if(e.key === 'Escape') { closeDetailModal(); closeCreateModal(); }
             });
             
-            // Listener para salvar título editável
             document.getElementById('appTitle').addEventListener('input', function() {
                 localStorage.setItem(STORAGE_KEY_TITLE, this.innerText);
             });
 
-            // Tooltip no MouseMove
             const timeline = document.getElementById('timelineList');
             const tooltip = document.getElementById('cursorTooltip');
             
             document.addEventListener('mousemove', (e) => {
-                // Só mostra se estiver sobre a timeline
+                if (filteredData.length === 0) { tooltip.style.display = 'none'; return; }
                 const rect = timeline.getBoundingClientRect();
                 const isInTimeline = e.clientX >= rect.left && e.clientX <= rect.right && e.clientY >= rect.top && e.clientY <= rect.bottom;
 
-                if (!isInTimeline || filteredData.length === 0) {
+                if (!isInTimeline) {
                     tooltip.style.display = 'none';
                     return;
                 }
@@ -634,10 +644,9 @@
                 tooltip.style.left = (e.clientX + 15) + 'px';
                 tooltip.style.top = (e.clientY + 15) + 'px';
 
-                // Lógica simples: Encontrar o elemento .container mais próximo do Y do mouse
-                const containers = document.querySelectorAll('.container');
                 let closest = null;
                 let minDiff = Infinity;
+                const containers = document.querySelectorAll('.container, .event-wrapper');
 
                 containers.forEach(el => {
                     const box = el.getBoundingClientRect();
@@ -655,30 +664,75 @@
             });
         }
 
-        function toggleCompactMode() {
-            const toggle = document.getElementById('compactModeSwitch');
-            isCompact = toggle.checked;
-            updateTimelineClass();
+        function setupDragAndDrop() {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            let dragCounter = 0;
+            const overlay = document.getElementById('dropZoneOverlay');
+
+            document.body.addEventListener('dragenter', (e) => {
+                dragCounter++;
+                document.body.classList.add('dragging');
+            });
+
+            document.body.addEventListener('dragleave', (e) => {
+                dragCounter--;
+                if (dragCounter === 0) {
+                    document.body.classList.remove('dragging');
+                }
+            });
+            
+            document.body.addEventListener('drop', handleDrop);
         }
 
-        function toggleProportionalMode() {
-            const toggle = document.getElementById('proportionalModeSwitch');
-            isProportional = toggle.checked;
-            updateTimelineClass();
-            renderTimeline(filteredData);
-        }
+        function handleDrop(e) {
+            document.body.classList.remove('dragging');
+            const dt = e.dataTransfer;
+            const files = dt.files;
 
-        function updateTimelineClass() {
-            const timeline = document.getElementById('timelineList');
-            timeline.classList.toggle('compact', isCompact);
-            timeline.classList.toggle('proportional', isProportional);
+            if (files.length > 0) {
+                const file = files[0];
+                if(fullData.length > 0) {
+                    if(!confirm(`Tem certeza que deseja substituir os dados atuais pelo arquivo "${file.name}"?`)) return;
+                }
+
+                if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        const data = new Uint8Array(evt.target.result);
+                        const workbook = XLSX.read(data, {type: 'array', cellDates: true});
+                        let targetSheet = "ReportOutput";
+                        if (!workbook.Sheets[targetSheet]) targetSheet = workbook.SheetNames[1] || workbook.SheetNames[0];
+                        const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[targetSheet], {header: 1, defval: '', blankrows: false});
+                        processExcelData(jsonData);
+                    };
+                    reader.readAsArrayBuffer(file);
+                } else if (file.name.endsWith('.json')) {
+                    const reader = new FileReader();
+                    reader.onload = function(evt) {
+                        try {
+                            loadProjectData(JSON.parse(evt.target.result));
+                            alert("Projeto importado!");
+                        } catch(err) { alert("Erro JSON inválido"); }
+                    };
+                    reader.readAsText(file);
+                } else {
+                    alert("Formato não suportado. Use Excel (.xlsx) ou JSON.");
+                }
+            }
         }
 
         function stringToColor(str) {
             if(!str) return '#e2e8f0';
             let hash = 0;
             for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
-            // Usa o hash para selecionar uma cor da paleta pastel
             const index = Math.abs(hash) % PASTEL_COLORS.length;
             return PASTEL_COLORS[index];
         }
@@ -688,249 +742,6 @@
             const d2 = new Date(date2); d2.setHours(0,0,0,0);
             const oneDay = 24 * 60 * 60 * 1000; 
             return Math.round(Math.abs((d1 - d2) / oneDay));
-        }
-
-        // --- Gráfico ---
-        function toggleChart() {
-            const wrapper = document.getElementById('chartContainerWrapper');
-            isChartVisible = !isChartVisible;
-            
-            if (isChartVisible) {
-                wrapper.style.display = 'block';
-                updateChart();
-                document.querySelector('.btn-chart').textContent = '❌ Fechar Gráfico';
-            } else {
-                wrapper.style.display = 'none';
-                document.querySelector('.btn-chart').textContent = '📊 Ver Gráfico';
-            }
-        }
-
-        function updateChart() {
-            // Se o gráfico não estiver visível ou não houver dados, não faz nada
-            if (!isChartVisible || fullData.length === 0) return;
-
-            const ctx = document.getElementById('activitiesChart').getContext('2d');
-            
-            // Agrupar dados por dia
-            const counts = {};
-            fullData.forEach(item => {
-                const dateKey = item.date; // DD/MM/YYYY
-                counts[dateKey] = (counts[dateKey] || 0) + 1;
-            });
-
-            // Ordenar datas
-            const sortedDates = Object.keys(counts).sort((a, b) => {
-                const partsA = a.split('/');
-                const partsB = b.split('/');
-                return new Date(partsA[2], partsA[1]-1, partsA[0]) - new Date(partsB[2], partsB[1]-1, partsB[0]);
-            });
-
-            const dataValues = sortedDates.map(d => counts[d]);
-
-            // Se já existe gráfico, destruir para recriar
-            if (myChart) {
-                myChart.destroy();
-            }
-
-            myChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: sortedDates,
-                    datasets: [{
-                        label: 'Atividades por Dia',
-                        data: dataValues,
-                        backgroundColor: 'rgba(37, 99, 235, 0.6)',
-                        borderColor: 'rgba(37, 99, 235, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: { stepSize: 1 }
-                        }
-                    },
-                    plugins: {
-                        legend: { display: false },
-                        title: { display: true, text: 'Volume de Atividades Diárias' }
-                    }
-                }
-            });
-        }
-
-        // --- Export/Import/Persistence/Excel ---
-        function exportProject() {
-            if(fullData.length === 0) { alert("Não há dados."); return; }
-            const notes = {};
-            for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key.startsWith('annex_')) notes[key] = localStorage.getItem(key);
-            }
-            // Incluir Favoritos
-            notes[STORAGE_KEY_STARRED] = JSON.stringify([...starredWOs]);
-
-            // Incluir Configurações de Visualização
-            const settings = {
-                isCompact,
-                isProportional,
-                currentFilter,
-                isStarredFilter, // Salvando o estado do toggle
-                sortOrder
-            };
-            
-            // Obter Título Editável
-            const title = document.getElementById('appTitle').innerText.trim() || "Cronograma_Manutencao";
-
-            const projectData = {
-                timestamp: new Date().toISOString(),
-                data: fullData,
-                notes: notes,
-                settings: settings, 
-                meta: { 
-                    subtitle: document.getElementById('reportDateSubtitle').innerText,
-                    title: title // Salva o título no JSON
-                }
-            };
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData));
-            
-            // Gerar nome do arquivo baseado no título
-            const cleanTitle = title.replace(/[^a-z0-9\u00C0-\u00FF]/gi, '_').toLowerCase();
-            const fileName = cleanTitle ? `${cleanTitle}.json` : "cronograma_manutencao.json";
-
-            const a = document.createElement('a');
-            a.href = dataStr; 
-            a.download = fileName;
-            document.body.appendChild(a); a.click(); a.remove();
-        }
-
-        function importProject(input) {
-            const file = input.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const pd = JSON.parse(e.target.result);
-                    loadProjectData(pd);
-                    alert("Importado com sucesso!");
-                } catch (err) { alert("Erro ao importar."); console.error(err); }
-                input.value = '';
-            };
-            reader.readAsText(file);
-        }
-
-        // Nova Função Reutilizável: Carrega dados do JSON (seja de arquivo ou URL)
-        function loadProjectData(pd) {
-            if(!pd.data) throw new Error("Inválido");
-            fullData = pd.data;
-            fullData.forEach(item => item.rawDate = new Date(item.rawDate));
-            
-            // Restaurar Notas e Favoritos
-            if(pd.notes) {
-                Object.keys(pd.notes).forEach(k => {
-                    if(k === STORAGE_KEY_STARRED) {
-                        starredWOs = new Set(JSON.parse(pd.notes[k]));
-                        localStorage.setItem(STORAGE_KEY_STARRED, pd.notes[k]);
-                    } else {
-                        localStorage.setItem(k, pd.notes[k]);
-                    }
-                });
-            }
-            
-            // Restaurar Configurações de Visualização (se existirem)
-            if (pd.settings) {
-                isCompact = !!pd.settings.isCompact;
-                isProportional = !!pd.settings.isProportional;
-                currentFilter = pd.settings.currentFilter || 'all';
-                isStarredFilter = !!pd.settings.isStarredFilter;
-                sortOrder = pd.settings.sortOrder || 'asc';
-                
-                // Atualizar Controles da UI
-                document.getElementById('compactModeSwitch').checked = isCompact;
-                document.getElementById('proportionalModeSwitch').checked = isProportional;
-                updateTimelineClass(); 
-                
-                document.querySelectorAll('.btn-filter').forEach(btn => {
-                    if(btn.id === 'btnFilterStar') {
-                        // Atualiza o botão de estrela separadamente
-                        btn.classList.toggle('active', isStarredFilter);
-                    } else {
-                        btn.classList.remove('active');
-                        const onclickAttr = btn.getAttribute('onclick');
-                        if (onclickAttr && onclickAttr.includes(`'${currentFilter}'`)) {
-                            btn.classList.add('active');
-                        }
-                    }
-                });
-                
-                const sortBtn = document.querySelector('.btn-sort');
-                if (sortBtn) {
-                    sortBtn.innerText = sortOrder === 'asc' ? '📅 Antigos ⬇️' : '📅 Recentes ⬆️';
-                }
-            }
-
-            // Restaurar Título
-            if(pd.meta?.title) {
-                document.getElementById('appTitle').innerText = pd.meta.title;
-                localStorage.setItem(STORAGE_KEY_TITLE, pd.meta.title);
-            }
-
-            saveMainDataToStorage(fullData, { subtitle: pd.meta?.subtitle });
-            document.getElementById('reportDateSubtitle').innerText = pd.meta?.subtitle || "Importado";
-            applyFiltersAndRender();
-            
-            // Atualiza gráfico se estiver aberto
-            if(isChartVisible) updateChart();
-        }
-
-        function saveMainDataToStorage(dataRows, metaInfo) {
-            try {
-                localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(dataRows));
-                if(metaInfo) localStorage.setItem(STORAGE_KEY_META, JSON.stringify(metaInfo));
-            } catch (e) { console.error(e); alert("Memória cheia."); }
-        }
-
-        function loadSavedData() {
-            const savedData = localStorage.getItem(STORAGE_KEY_DATA);
-            const savedMeta = localStorage.getItem(STORAGE_KEY_META);
-            
-            // Carregar Favoritos
-            const savedStars = localStorage.getItem(STORAGE_KEY_STARRED);
-            if(savedStars) starredWOs = new Set(JSON.parse(savedStars));
-
-            // Carregar Título Personalizado
-            const savedTitle = localStorage.getItem(STORAGE_KEY_TITLE);
-            if(savedTitle) document.getElementById('appTitle').innerText = savedTitle;
-
-            if (savedData) {
-                fullData = JSON.parse(savedData);
-                fullData.forEach(item => item.rawDate = new Date(item.rawDate));
-                if(savedMeta) document.getElementById('reportDateSubtitle').innerText = JSON.parse(savedMeta).subtitle || "Recuperado";
-                applyFiltersAndRender();
-            } else {
-                document.getElementById('timelineList').innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;">Nenhum dado salvo. Carregue um Excel.</div>';
-            }
-        }
-
-        function clearAllData() {
-            if(confirm("Apagar tudo?")) { localStorage.clear(); location.reload(); }
-        }
-
-        document.getElementById('excelFile').addEventListener('change', handleFile);
-        function handleFile(e) {
-            const file = e.target.files[0];
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, {type: 'array', cellDates: true});
-                let targetSheet = "ReportOutput";
-                if (!workbook.Sheets[targetSheet]) targetSheet = workbook.SheetNames[1] || workbook.SheetNames[0];
-                const jsonData = XLSX.utils.sheet_to_json(workbook.Sheets[targetSheet], {header: 1, defval: '', blankrows: false});
-                processExcelData(jsonData);
-            };
-            reader.readAsArrayBuffer(file);
         }
 
         function formatDate(dateVal) {
@@ -954,6 +765,7 @@
                 if (!wo || wo === "S/N") return; 
                 if (!execDate) { pendingCount++; return; }
                 fullData.push({
+                    type: 'wo', 
                     wo: wo,
                     desc: row[COLS.DESC] || "Sem descrição",
                     date: formatDate(execDate),
@@ -966,33 +778,333 @@
             saveMainDataToStorage(fullData, { subtitle: reportSubtitle });
             checkPendingAlert(pendingCount);
             applyFiltersAndRender();
-            
-            // Atualiza gráfico se estiver aberto
             if(isChartVisible) updateChart();
         }
 
-        function checkPendingAlert(count) {
-            const alertEl = document.getElementById('pendingAlert');
-            if (count > 0) { alertEl.style.display = 'block'; alertEl.innerText = `⚠️ ${count} atividades sem Data de Execução ocultadas.`; }
-            else { alertEl.style.display = 'none'; }
+        function loadProjectData(pd) {
+            if(!pd.data) throw new Error("Inválido");
+            fullData = pd.data;
+            fullData.forEach(item => item.rawDate = new Date(item.rawDate));
+            
+            if(pd.notes) {
+                Object.keys(pd.notes).forEach(k => {
+                    if(k === STORAGE_KEY_STARRED) {
+                        starredWOs = new Set(JSON.parse(pd.notes[k]));
+                        localStorage.setItem(STORAGE_KEY_STARRED, pd.notes[k]);
+                    } else if (k === STORAGE_KEY_HIDDEN) {
+                        hiddenWOs = new Set(JSON.parse(pd.notes[k]));
+                        localStorage.setItem(STORAGE_KEY_HIDDEN, pd.notes[k]);
+                    } else {
+                        localStorage.setItem(k, pd.notes[k]);
+                    }
+                });
+            }
+            
+            if (pd.settings) {
+                currentFilter = pd.settings.currentFilter || 'all';
+                isStarredFilter = !!pd.settings.isStarredFilter;
+                isHiddenFilter = !!pd.settings.isHiddenFilter;
+                sortOrder = pd.settings.sortOrder || 'asc';
+                
+                document.querySelectorAll('.btn-filter').forEach(btn => {
+                    if(btn.id === 'btnFilterStar') {
+                        btn.classList.toggle('active', isStarredFilter);
+                    } else if(btn.id === 'btnFilterHide') {
+                        btn.classList.toggle('active', isHiddenFilter);
+                    } else {
+                        btn.classList.remove('active');
+                        const onclickAttr = btn.getAttribute('onclick');
+                        if (onclickAttr && onclickAttr.includes(`'${currentFilter}'`)) {
+                            btn.classList.add('active');
+                        }
+                    }
+                });
+                
+                const sortBtn = document.querySelector('.btn-sort');
+                if (sortBtn) {
+                    sortBtn.innerText = sortOrder === 'asc' ? '📅 Antigos ⬇️' : '📅 Recentes ⬆️';
+                }
+            }
+
+            if(pd.meta?.title) {
+                document.getElementById('appTitle').innerText = pd.meta.title;
+                localStorage.setItem(STORAGE_KEY_TITLE, pd.meta.title);
+            }
+
+            saveMainDataToStorage(fullData, { subtitle: pd.meta?.subtitle });
+            document.getElementById('reportDateSubtitle').innerText = pd.meta?.subtitle || "Importado";
+            applyFiltersAndRender();
+            if(isChartVisible) updateChart();
         }
 
-        // --- Filtros ---
+        function applyFiltersAndRender() {
+            filteredData = fullData.filter(item => {
+                if (hiddenWOs.has(item.wo) && isHiddenFilter) return false;
+                if (item.type === 'event') return true;
+                if (currentActivityFilter && item.activityCode !== currentActivityFilter) return false;
+                if (isStarredFilter && !starredWOs.has(item.wo)) return false;
+                if (currentFilter === 'all') return true;
+                const cause = (item.cause || "").toUpperCase();
+                if (currentFilter === 'preventiva') return cause.includes('PREVENTIV');
+                if (currentFilter === 'corretiva') return cause.includes('CORRECT') || cause.includes('CORRETIVA');
+                return false;
+            });
+
+            filteredData.sort((a, b) => {
+                return sortOrder === 'asc' 
+                    ? new Date(a.rawDate) - new Date(b.rawDate) 
+                    : new Date(b.rawDate) - new Date(a.rawDate);
+            });
+
+            renderTimeline(filteredData);
+        }
+
+        function renderTimeline(data) {
+            const container = document.getElementById('timelineList');
+            container.innerHTML = '';
+            
+            if(data.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">Nenhuma atividade.</div>';
+                return;
+            }
+
+            let lastDate = null;
+            let lastMonthYear = "";
+            let woCounter = 0; 
+
+            data.forEach((item, index) => {
+                const itemDate = new Date(item.rawDate);
+                const currentMonthYear = itemDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
+                
+                if (currentMonthYear !== lastMonthYear) {
+                    const separator = document.createElement('div');
+                    separator.className = 'time-separator';
+                    separator.innerHTML = `<span class="time-badge">${currentMonthYear.toUpperCase()}</span>`;
+                    container.appendChild(separator);
+                    lastMonthYear = currentMonthYear;
+                }
+
+                let marginTop = 0;
+                if (lastDate) {
+                    const daysDiff = getDaysDiff(itemDate, lastDate);
+                    if (daysDiff > 1) {
+                        const gapDiv = document.createElement('div');
+                        gapDiv.className = 'timeline-gap';
+                        const effectiveGap = Math.min(daysDiff, 60); 
+                        gapDiv.style.height = `${effectiveGap * PIXELS_PER_DAY}px`;
+                        
+                        const label = document.createElement('span');
+                        label.className = 'gap-label';
+                        label.innerText = `${daysDiff - 1} dia(s) sem atividade`;
+                        gapDiv.appendChild(label);
+                        container.appendChild(gapDiv);
+                    } else if (daysDiff === 1) {
+                        marginTop = PIXELS_PER_DAY;
+                    }
+                }
+
+                const isHidden = hiddenWOs.has(item.wo);
+                const hiddenClass = isHidden ? 'is-hidden-item' : '';
+
+                if (item.type === 'event') {
+                    const eventDiv = document.createElement('div');
+                    eventDiv.className = 'event-wrapper';
+                    eventDiv.dataset.date = item.date;
+                    if (marginTop > 0) eventDiv.style.marginTop = `${marginTop}px`;
+                    
+                    eventDiv.innerHTML = `
+                        <div class="event-content ${hiddenClass}" title="${item.desc}" onclick="openDetailModal('${item.wo}', '', '${item.desc}')">
+                            <span class="event-date">${item.date}</span>
+                            ${item.desc}
+                        </div>
+                    `;
+                    container.appendChild(eventDiv);
+
+                } else {
+                    const side = woCounter % 2 === 0 ? 'left' : 'right';
+                    const styleClass = getStyleClass(item.cause);
+                    const activityColor = stringToColor(item.activityCode);
+                    const safeDesc = item.desc.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                    
+                    const isStarred = starredWOs.has(item.wo);
+                    // Ícone de Estrela SVG
+                    const starIcon = isStarred 
+                        ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`
+                        : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
+                    const starClass = isStarred ? 'starred' : '';
+
+                    // Ícone de Olho SVG
+                    const hideIcon = isHidden 
+                        ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`
+                        : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+                    
+                    const hideBtnClass = isHidden ? 'hidden-active' : '';
+
+                    const div = document.createElement('div');
+                    div.className = `container ${side}`;
+                    div.dataset.date = item.date;
+                    
+                    if (marginTop > 0) div.style.marginTop = `${marginTop}px`;
+
+                    div.innerHTML = `
+                        <div class="content ${styleClass} ${hiddenClass}" onclick="openDetailModal('${item.wo}', '${item.activityCode}', '${safeDesc}')">
+                            <div class="wo-header-row">
+                                <span class="wo-title-row">
+                                    <span class="wo-title">WO: ${item.wo}</span>
+                                    <div class="card-actions">
+                                        <button class="btn-icon btn-hide ${hideBtnClass}" onclick="toggleHide('${item.wo}', event)" title="Ocultar/Exibir">${hideIcon}</button>
+                                        <button class="btn-icon btn-star ${starClass}" onclick="toggleStar('${item.wo}', event)" title="Favoritar">${starIcon}</button>
+                                    </div>
+                                </span>
+                                <span class="date-badge">${item.date}</span>
+                            </div>
+                            <div class="wo-desc">${item.desc}</div>
+                            <div class="wo-meta">
+                                ${item.asset ? `<span class="tag">🏭 ${item.asset}</span>` : ''}
+                                ${item.activityCode ? 
+                                    `<button class="tag tag-activity" 
+                                        style="background-color: ${activityColor};" 
+                                        onclick="event.stopPropagation(); filterByActivity('${item.activityCode}')">
+                                        ${item.activityCode}
+                                    </button>` : ''}
+                                <span class="tag">${item.cause}</span>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(div);
+                    woCounter++;
+                }
+                
+                lastDate = itemDate;
+            });
+        }
+
+        // Função para alternar a visibilidade da barra de controles
+        function toggleControls() {
+            const row = document.getElementById('controlsRow');
+            const icon = document.getElementById('toggleIcon');
+            row.classList.toggle('hidden');
+            
+            // Muda o ícone dependendo do estado
+            const isHidden = row.classList.contains('hidden');
+            icon.innerText = isHidden ? '▶' : '▲';
+        }
+
+        function openCreateModal() {
+            document.getElementById('createModal').classList.add('active');
+            document.getElementById('newDate').valueAsDate = new Date();
+            document.getElementById('newWO').value = '';
+            document.getElementById('newAsset').value = '';
+            document.getElementById('newActCode').value = '';
+            document.getElementById('newDesc').value = '';
+            setCreateTab('wo', document.querySelector('.tab-btn')); 
+        }
+
+        function closeCreateModal() {
+            document.getElementById('createModal').classList.remove('active');
+        }
+
+        function setCreateTab(type, btn) {
+            createType = type;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            const woFields = document.getElementById('woFields');
+            if(type === 'event') {
+                woFields.style.display = 'none';
+            } else {
+                woFields.style.display = 'block';
+            }
+        }
+
+        function saveNewItem() {
+            const dateVal = document.getElementById('newDate').value;
+            const desc = document.getElementById('newDesc').value;
+            
+            if(!dateVal || !desc) { alert("Preencha a data e a descrição."); return; }
+
+            const dateObj = new Date(dateVal + 'T12:00:00'); 
+            const formattedDate = dateObj.toLocaleDateString('pt-BR');
+
+            const newItem = {
+                type: createType,
+                desc: desc,
+                date: formattedDate,
+                rawDate: dateObj
+            };
+
+            if(createType === 'wo') {
+                const wo = document.getElementById('newWO').value || "MANUAL-" + Math.floor(Math.random()*1000);
+                newItem.wo = wo;
+                newItem.cause = document.getElementById('newType').value;
+                newItem.asset = document.getElementById('newAsset').value;
+                newItem.activityCode = document.getElementById('newActCode').value;
+            } else {
+                newItem.wo = "EVENT-" + Math.floor(Math.random()*1000); 
+            }
+
+            fullData.push(newItem);
+            saveMainDataToStorage(fullData, { subtitle: document.getElementById('reportDateSubtitle').innerText });
+            applyFiltersAndRender();
+            closeCreateModal();
+            alert("Item adicionado!");
+        }
+
+        function toggleStar(wo, event) {
+            event.stopPropagation();
+            if(starredWOs.has(wo)) starredWOs.delete(wo);
+            else starredWOs.add(wo);
+            localStorage.setItem(STORAGE_KEY_STARRED, JSON.stringify([...starredWOs]));
+            applyFiltersAndRender();
+        }
+
+        function toggleHide(wo, event) {
+            event.stopPropagation();
+            if(hiddenWOs.has(wo)) hiddenWOs.delete(wo);
+            else hiddenWOs.add(wo);
+            localStorage.setItem(STORAGE_KEY_HIDDEN, JSON.stringify([...hiddenWOs]));
+            applyFiltersAndRender();
+        }
+
+        function deleteCurrentItem() {
+            if(!currentEditingId) return;
+            if(confirm("Tem certeza que deseja EXCLUIR este item? Esta ação não pode ser desfeita.")) {
+                fullData = fullData.filter(item => item.wo !== currentEditingId);
+                starredWOs.delete(currentEditingId);
+                hiddenWOs.delete(currentEditingId);
+                saveMainDataToStorage(fullData, { subtitle: document.getElementById('reportDateSubtitle').innerText });
+                localStorage.setItem(STORAGE_KEY_STARRED, JSON.stringify([...starredWOs]));
+                localStorage.setItem(STORAGE_KEY_HIDDEN, JSON.stringify([...hiddenWOs]));
+                closeDetailModal();
+                applyFiltersAndRender();
+            }
+        }
+
+        function getStyleClass(cause) {
+            const c = (cause || "").toUpperCase();
+            if(c.includes("PREVENTIV")) return "preventiva";
+            if(c.includes("CORRECT") || c.includes("CORRETIVA")) return "corretiva";
+            return "outros";
+        }
+
         function setFilter(type, btn) {
             currentFilter = type;
             document.querySelectorAll('.btn-filter').forEach(b => { 
-                if(!b.classList.contains('btn-sort') && !b.classList.contains('btn-filter-star')) {
-                    b.classList.remove('active'); 
-                }
+                if(!b.classList.contains('btn-sort') && !b.classList.contains('btn-filter-star') && !b.classList.contains('btn-filter-hide')) b.classList.remove('active'); 
             });
             btn.classList.add('active');
             applyFiltersAndRender();
         }
 
-        // Nova função para toggle de Favoritos (Independente)
         function toggleStarredFilter(btn) {
             isStarredFilter = !isStarredFilter;
             btn.classList.toggle('active', isStarredFilter);
+            applyFiltersAndRender();
+        }
+
+        function toggleHiddenFilter(btn) {
+            isHiddenFilter = !isHiddenFilter;
+            btn.classList.toggle('active', isHiddenFilter);
             applyFiltersAndRender();
         }
 
@@ -1016,207 +1128,137 @@
             applyFiltersAndRender();
         }
 
-        function toggleStar(wo, event) {
-            event.stopPropagation(); // Evita abrir o modal
-            if(starredWOs.has(wo)) {
-                starredWOs.delete(wo);
-            } else {
-                starredWOs.add(wo);
-            }
-            // Salvar no localStorage
-            localStorage.setItem(STORAGE_KEY_STARRED, JSON.stringify([...starredWOs]));
-            // Re-renderizar (para atualizar icones ou filtro)
-            applyFiltersAndRender();
+        function saveMainDataToStorage(dataRows, metaInfo) {
+            try {
+                localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(dataRows));
+                if(metaInfo) localStorage.setItem(STORAGE_KEY_META, JSON.stringify(metaInfo));
+            } catch (e) { console.error(e); alert("Memória cheia."); }
         }
 
-        function applyFiltersAndRender() {
-            filteredData = fullData.filter(item => {
-                // 1. Filtro por Código de Atividade (Se existir)
-                if (currentActivityFilter && item.activityCode !== currentActivityFilter) return false;
-                
-                // 2. Filtro de Favoritos (Toggle - Lógica E)
-                // Se o filtro de estrelas estiver ATIVO, e o item NÃO tiver estrela, esconde ele.
-                if (isStarredFilter && !starredWOs.has(item.wo)) return false;
-
-                // 3. Filtro de Tipo (All, Preventiva, Corretiva)
-                if (currentFilter === 'all') return true;
-                const cause = (item.cause || "").toUpperCase();
-                if (currentFilter === 'preventiva') return cause.includes('PREVENTIV');
-                if (currentFilter === 'corretiva') return cause.includes('CORRECT') || cause.includes('CORRETIVA');
-                return false;
-            });
-
-            filteredData.sort((a, b) => {
-                return sortOrder === 'asc' 
-                    ? new Date(a.rawDate) - new Date(b.rawDate) 
-                    : new Date(b.rawDate) - new Date(a.rawDate);
-            });
-
-            renderTimeline(filteredData);
-        }
-
-        function getStyleClass(cause) {
-            const c = (cause || "").toUpperCase();
-            if(c.includes("PREVENTIV")) return "preventiva";
-            if(c.includes("CORRECT") || c.includes("CORRETIVA")) return "corretiva";
-            return "outros";
-        }
-
-        // --- RENDERIZADOR ---
-        function renderTimeline(data) {
-            const container = document.getElementById('timelineList');
-            container.innerHTML = '';
+        function loadSavedData() {
+            const savedData = localStorage.getItem(STORAGE_KEY_DATA);
+            const savedMeta = localStorage.getItem(STORAGE_KEY_META);
             
-            if(data.length === 0) {
-                container.innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;">Nenhuma atividade encontrada.</div>';
-                return;
+            const savedStars = localStorage.getItem(STORAGE_KEY_STARRED);
+            if(savedStars) starredWOs = new Set(JSON.parse(savedStars));
+            
+            const savedHidden = localStorage.getItem(STORAGE_KEY_HIDDEN);
+            if(savedHidden) hiddenWOs = new Set(JSON.parse(savedHidden));
+
+            const savedTitle = localStorage.getItem(STORAGE_KEY_TITLE);
+            if(savedTitle) document.getElementById('appTitle').innerText = savedTitle;
+
+            if (savedData) {
+                fullData = JSON.parse(savedData);
+                fullData.forEach(item => item.rawDate = new Date(item.rawDate));
+                if(savedMeta) document.getElementById('reportDateSubtitle').innerText = JSON.parse(savedMeta).subtitle || "Recuperado";
+                applyFiltersAndRender();
+            } else {
+                document.getElementById('timelineList').innerHTML = '<div style="text-align:center; padding:40px; color:#94a3b8;">Nenhum dado salvo. Carregue um Excel.</div>';
             }
-
-            let lastDate = null;
-            let lastMonthYear = "";
-
-            data.forEach((item, index) => {
-                const itemDate = new Date(item.rawDate);
-                const currentMonthYear = itemDate.toLocaleString('pt-BR', { month: 'long', year: 'numeric' });
-                
-                if (currentMonthYear !== lastMonthYear) {
-                    const separator = document.createElement('div');
-                    separator.className = 'time-separator';
-                    separator.innerHTML = `<span class="time-badge">${currentMonthYear.toUpperCase()}</span>`;
-                    container.appendChild(separator);
-                    lastMonthYear = currentMonthYear;
-                }
-
-                // Cálculo de Lacunas e Espaçamento
-                let marginTop = 0;
-                
-                if (isProportional && lastDate) {
-                    const daysDiff = getDaysDiff(itemDate, lastDate);
-                    
-                    if (daysDiff > 1) {
-                        const gapDiv = document.createElement('div');
-                        gapDiv.className = 'timeline-gap';
-                        const effectiveGap = Math.min(daysDiff, 60); 
-                        gapDiv.style.height = `${effectiveGap * PIXELS_PER_DAY}px`;
-                        
-                        const label = document.createElement('span');
-                        label.className = 'gap-label';
-                        label.innerText = `${daysDiff - 1} dia(s) sem atividade`;
-                        gapDiv.appendChild(label);
-                        
-                        container.appendChild(gapDiv);
-                    } else if (daysDiff === 1) {
-                            marginTop = PIXELS_PER_DAY;
-                    }
-                }
-
-                const side = index % 2 === 0 ? 'left' : 'right';
-                const styleClass = getStyleClass(item.cause);
-                const activityColor = stringToColor(item.activityCode);
-                const safeDesc = item.desc.replace(/'/g, "\\'").replace(/"/g, '&quot;');
-                
-                // Lógica de estrela
-                const isStarred = starredWOs.has(item.wo);
-                const starIcon = isStarred ? '★' : '☆';
-                const starClass = isStarred ? 'starred' : '';
-
-                const div = document.createElement('div');
-                div.className = `container ${side}`;
-                div.dataset.date = item.date; // Para o tooltip funcionar fácil
-                
-                if (isProportional && marginTop > 0) {
-                    div.style.marginTop = `${marginTop}px`;
-                }
-
-                div.innerHTML = `
-                    <div class="content ${styleClass}" onclick="openModal('${item.wo}', '${item.activityCode}', '${safeDesc}')">
-                        <div class="wo-header-row">
-                             <span class="wo-title-row">
-                                <span class="wo-title">WO: ${item.wo}</span>
-                                <button class="btn-star ${starClass}" onclick="toggleStar('${item.wo}', event)">${starIcon}</button>
-                             </span>
-                             <span class="date-badge">${item.date}</span>
-                        </div>
-                        <div class="wo-desc">${item.desc}</div>
-                        <div class="wo-meta">
-                            ${item.asset ? `<span class="tag">🏭 ${item.asset}</span>` : ''}
-                            ${item.activityCode ? 
-                                `<button class="tag tag-activity" 
-                                    style="background-color: ${activityColor};" 
-                                    onclick="event.stopPropagation(); filterByActivity('${item.activityCode}')">
-                                    ${item.activityCode}
-                                 </button>` : ''}
-                            <span class="tag">${item.cause}</span>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(div);
-                
-                lastDate = itemDate;
-            });
         }
 
-        // --- Modal e Anexos Atualizados ---
-        function openModal(wo, actCode, desc) {
+        function clearAllData() {
+            if(confirm("Apagar tudo?")) { localStorage.clear(); location.reload(); }
+        }
+
+        function checkPendingAlert(count) {
+            const alertEl = document.getElementById('pendingAlert');
+            if (count > 0) { alertEl.style.display = 'block'; alertEl.innerText = `⚠️ ${count} atividades sem Data de Execução ocultadas.`; }
+            else { alertEl.style.display = 'none'; }
+        }
+
+        function openDetailModal(wo, actCode, desc) {
             const modal = document.getElementById('detailModal');
             currentEditingId = wo;
             currentActivityCode = actCode === "undefined" || actCode === "" ? null : actCode;
-            document.getElementById('modalWoTitle').innerText = `WO: ${wo}`;
+            document.getElementById('modalWoTitle').innerText = wo.startsWith('EVENT') ? 'Evento de Linha' : `WO: ${wo}`;
             const infoEl = document.getElementById('modalActivityInfo');
-            if (currentActivityCode) infoEl.innerHTML = `Vínculo: Código <b>${currentActivityCode}</b>`;
-            else infoEl.innerHTML = `Vínculo: Exclusivo WO`;
+            if(wo.startsWith('EVENT')) {
+                infoEl.innerHTML = '';
+            } else {
+                infoEl.innerHTML = currentActivityCode ? `Vínculo: Código <b>${currentActivityCode}</b>` : `Vínculo: Exclusivo WO`;
+            }
             
-            // Carregar dados salvos
             const key = currentActivityCode ? `annex_act_${currentActivityCode}` : `annex_wo_${wo}`;
             const savedRaw = localStorage.getItem(key);
-            
             let data = { text: "", periodicity: "", resource: "", hh: "" };
-            
-            // Tenta parsear JSON, se falhar assume que é texto antigo (legacy)
-            if(savedRaw) {
-                try {
-                    const parsed = JSON.parse(savedRaw);
-                    if (typeof parsed === 'object' && parsed !== null) {
-                        data = { ...data, ...parsed };
-                    } else {
-                        data.text = savedRaw;
-                    }
-                } catch(e) {
-                    data.text = savedRaw;
-                }
-            }
+            if(savedRaw) { try { const p = JSON.parse(savedRaw); if(typeof p==='object') data={...data, ...p}; else data.text=savedRaw; } catch(e){ data.text=savedRaw; } }
 
             document.getElementById('detailText').value = data.text;
             document.getElementById('detailPeriodicity').value = data.periodicity;
             document.getElementById('detailResource').value = data.resource;
             document.getElementById('detailHH').value = data.hh;
-
             document.getElementById('saveStatus').style.opacity = '0';
             modal.classList.add('active');
         }
 
-        function closeModal() { document.getElementById('detailModal').classList.remove('active'); }
+        function closeDetailModal() { document.getElementById('detailModal').classList.remove('active'); }
 
         function saveDetails() {
-            // Coleta dados dos inputs
             const data = {
                 text: document.getElementById('detailText').value,
                 periodicity: document.getElementById('detailPeriodicity').value,
                 resource: document.getElementById('detailResource').value,
                 hh: document.getElementById('detailHH').value
             };
-
             const key = currentActivityCode ? `annex_act_${currentActivityCode}` : `annex_wo_${currentEditingId}`;
-            
-            // Salva como JSON string
             localStorage.setItem(key, JSON.stringify(data));
-            
             const status = document.getElementById('saveStatus');
             status.style.opacity = '1';
             setTimeout(() => status.style.opacity = '0', 2000);
         }
 
-        document.getElementById('detailModal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+        function toggleChart() {
+            const wrapper = document.getElementById('chartContainerWrapper');
+            isChartVisible = !isChartVisible;
+            if (isChartVisible) { wrapper.style.display = 'block'; updateChart(); document.querySelector('.btn-chart').textContent = '❌ Fechar Gráfico'; } 
+            else { wrapper.style.display = 'none'; document.querySelector('.btn-chart').textContent = '📊 Ver Gráfico'; }
+        }
+
+        function updateChart() {
+            if (!isChartVisible || fullData.length === 0) return;
+            const ctx = document.getElementById('activitiesChart').getContext('2d');
+            const counts = {};
+            fullData.forEach(item => { if(item.type !== 'event') { const k = item.date; counts[k] = (counts[k] || 0) + 1; } }); 
+            const sortedDates = Object.keys(counts).sort((a, b) => { const pa=a.split('/'), pb=b.split('/'); return new Date(pa[2], pa[1]-1, pa[0]) - new Date(pb[2], pb[1]-1, pb[0]); });
+            const dataValues = sortedDates.map(d => counts[d]);
+            if (myChart) myChart.destroy();
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sortedDates,
+                    datasets: [{ label: 'Atividades por Dia', data: dataValues, backgroundColor: 'rgba(37, 99, 235, 0.6)', borderColor: 'rgba(37, 99, 235, 1)', borderWidth: 1 }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }, plugins: { legend: { display: false }, title: { display: true, text: 'Volume de Atividades Diárias' } } }
+            });
+        }
+
+        function exportProject() {
+            if(fullData.length === 0) { alert("Não há dados."); return; }
+            const notes = {};
+            for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k.startsWith('annex_')) notes[k] = localStorage.getItem(k); }
+            notes[STORAGE_KEY_STARRED] = JSON.stringify([...starredWOs]);
+            notes[STORAGE_KEY_HIDDEN] = JSON.stringify([...hiddenWOs]);
+            
+            const settings = { currentFilter, isStarredFilter, isHiddenFilter, sortOrder };
+            const title = document.getElementById('appTitle').innerText.trim() || "Cronograma_Manutencao";
+            const projectData = { timestamp: new Date().toISOString(), data: fullData, notes: notes, settings: settings, meta: { subtitle: document.getElementById('reportDateSubtitle').innerText, title: title } };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData));
+            const fileName = (title.replace(/[^a-z0-9\u00C0-\u00FF]/gi, '_').toLowerCase() || "cronograma") + ".json";
+            const a = document.createElement('a'); a.href = dataStr; a.download = fileName; document.body.appendChild(a); a.click(); a.remove();
+        }
+
+        function importProject(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) { try { loadProjectData(JSON.parse(e.target.result)); alert("Importado com sucesso!"); } catch (err) { alert("Erro ao importar."); } input.value = ''; };
+            reader.readAsText(file);
+        }
+
+        document.getElementById('detailModal').addEventListener('click', function(e) { if (e.target === this) closeDetailModal(); });
+        document.getElementById('createModal').addEventListener('click', function(e) { if (e.target === this) closeCreateModal(); });
     </script>
 </body>
 </html>
