@@ -5,14 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- SEGURANÇA: Content Security Policy (CSP) -->
-    <!-- Permite scripts apenas do próprio documento e das CDNs confiáveis listadas. Permite estilos inline (necessário para a UI atual). -->
+    <!-- Adicionado html2canvas via jsdelivr (já coberto pela regra existente) -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.sheetjs.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:;">
     
     <title>Cronograma de Manutenção</title>
     <!-- Biblioteca SheetJS -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
-    <!-- Biblioteca Chart.js para o Gráfico -->
+    <!-- Biblioteca Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Biblioteca html2canvas para Screenshot -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     
     <style>
         :root {
@@ -32,8 +34,9 @@
             --star-color: #eab308;
             --hide-color: #94a3b8;
             --ruler-color: #cbd5e1;
-            /* Escala Fixa: 40px visualmente representa 1 dia */
             --pixels-per-day: 40px; 
+            /* Variável para controle dinâmico de linhas de texto no card horizontal */
+            --card-lines: 3;
         }
 
         /* Botão Discreto para Esconder Filtros */
@@ -171,6 +174,8 @@
         .btn-clear:hover { background-color: #fef2f2; }
         .btn-chart { background-color: #8b5cf6; color: white; border-color: #7c3aed; }
         .btn-chart:hover { background-color: #7c3aed; }
+        .btn-png { background-color: #3b82f6; color: white; border-color: #2563eb; }
+        .btn-png:hover { background-color: #2563eb; }
         .btn-add { background-color: var(--text-color); color: white; border-color: var(--text-color); }
         .btn-add:hover { background-color: #334155; }
 
@@ -376,6 +381,20 @@
         .btn-hide.hidden-active { color: var(--text-color); }
         .btn-hide:hover { color: var(--text-color); }
 
+        /* Borda Dourada para Favoritos (Vertical) */
+        .content.starred-border {
+            border: 2px solid var(--star-color) !important;
+            box-shadow: 0 0 8px rgba(234, 179, 8, 0.4) !important;
+        }
+
+        /* Borda Dourada MAIS DESTACADA no Modo Horizontal */
+        .h-content.starred-border {
+            border: 4px solid var(--star-color) !important;
+            box-shadow: 0 0 15px rgba(234, 179, 8, 0.8) !important;
+            transform: translateX(-50%) scale(1.02); /* Leve aumento para destaque */
+            z-index: 20;
+        }
+
         .wo-desc { font-size: 0.85rem; font-weight: 600; color: var(--text-color); line-height: 1.2; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .wo-meta { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 4px; }
         .left .wo-meta { justify-content: flex-end; }
@@ -509,7 +528,7 @@
             color: var(--text-color); 
             line-height: 1.3; 
             display: -webkit-box; 
-            -webkit-line-clamp: 3; 
+            -webkit-line-clamp: var(--card-lines); /* Controlado via JS */
             -webkit-box-orient: vertical; 
             overflow: hidden; 
         }
@@ -582,6 +601,7 @@
                     📄 Excel
                 </label>
                 <button class="btn-action btn-chart" onclick="toggleChart()">📊 Ver Gráfico</button>
+                <button class="btn-action btn-png" onclick="captureScreenshot()" title="Baixar Imagem com Fundo Transparente">📷 PNG</button>
                 <button class="btn-action btn-export" onclick="exportProject()" title="Baixar Projeto">💾 Salvar</button>
                 <label class="btn-action btn-import" title="Abrir Projeto">
                     <input type="file" id="importFile" accept=".json" onchange="importProject(this)" />
@@ -611,11 +631,17 @@
             <!-- Botão de Alternar Visão -->
             <button class="btn-filter btn-view-mode" onclick="toggleViewMode()">↔ Visão</button>
             
-            <!-- Controle de Níveis Horizontal -->
+            <!-- Controle de Níveis Horizontal e Altura do Card -->
             <div class="level-control" id="levelControl" style="display:none; border-left: 1px solid #ccc; padding-left: 10px; margin-left: 5px;">
                 <label for="hLevelInput">Níveis:</label>
                 <!-- Alterado para step=2 para garantir pares -->
                 <input type="number" id="hLevelInput" class="level-input" value="6" min="2" max="8" step="2" onchange="updateHorizontalLevels(this.value)">
+                
+                <span style="border-left: 1px solid #ccc; margin: 0 8px; height: 15px;"></span>
+                
+                <label for="cardLinesInput">Linhas:</label>
+                <!-- CORREÇÃO APLICADA AQUI: onchange -> oninput -->
+                <input type="number" id="cardLinesInput" class="level-input" value="3" min="2" max="15" oninput="updateCardLines(this.value)">
             </div>
 
             <span style="border-left: 1px solid #ccc; margin: 0 5px;"></span>
@@ -800,7 +826,8 @@
         let currentEditingId = null;
         let currentActivityCode = null;
         let createType = 'wo'; 
-        let horizontalLevels = 6; // Padrão
+        let horizontalLevels = 6; 
+        let cardLines = 3; // Nova variável de estado
 
         let starredWOs = new Set();
         let hiddenWOs = new Set();
@@ -862,6 +889,14 @@
 
             document.getElementById('hLevelInput').value = horizontalLevels;
             renderHorizontalTimeline(filteredData);
+        }
+
+        function updateCardLines(val) {
+            let lines = parseInt(val, 10);
+            if(lines < 2) lines = 2;
+            if(lines > 15) lines = 15;
+            cardLines = lines; // Update state
+            document.documentElement.style.setProperty('--card-lines', lines);
         }
 
         // --- Date Mask Logic ---
@@ -926,6 +961,34 @@
                 } else {
                     tooltip.style.display = 'none'; 
                 }
+            });
+        }
+
+        // --- Screenshot Logic ---
+        function captureScreenshot() {
+            const targetId = isHorizontalMode ? 'timelineHorizontal' : 'timelineList';
+            const element = document.getElementById(targetId);
+            
+            if(!element || element.style.display === 'none') {
+                alert("Erro: Timeline não visível.");
+                return;
+            }
+
+            // Para captura horizontal, precisamos garantir que o scroll seja capturado
+            // html2canvas faz isso por padrão, mas configuramos backgroundColor: null para transparência
+            
+            html2canvas(element, {
+                backgroundColor: null, // Transparente
+                scrollX: 0,
+                scrollY: -window.scrollY // Ajuste para posição correta se a página estiver scrollada
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `cronograma_${isHorizontalMode ? 'horizontal' : 'vertical'}_${new Date().getTime()}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+            }).catch(err => {
+                console.error(err);
+                alert("Erro ao gerar imagem.");
             });
         }
 
@@ -1047,6 +1110,13 @@
                 isHorizontalMode = !!pd.settings.isHorizontalMode;
                 horizontalLevels = pd.settings.horizontalLevels || 6;
                 document.getElementById('hLevelInput').value = horizontalLevels;
+                
+                // Initialize card lines if present
+                if (pd.settings.cardLines) {
+                    cardLines = pd.settings.cardLines;
+                    document.getElementById('cardLinesInput').value = cardLines;
+                    document.documentElement.style.setProperty('--card-lines', cardLines);
+                }
                 
                 document.querySelectorAll('.btn-filter').forEach(btn => {
                     if(btn.id === 'btnFilterStar') btn.classList.toggle('active', isStarredFilter);
@@ -1187,7 +1257,7 @@
                     // Ícones SVG fixos
                     const starIcon = isStarred ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
                     const starClass = isStarred ? 'starred' : '';
-                    const hideIcon = isHidden ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8-11-8-11-8-11-8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+                    const hideIcon = isHidden ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8-11-8-11-8-11-8-11-8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
                     const hideBtnClass = isHidden ? 'hidden-active' : '';
 
                     const div = document.createElement('div');
@@ -1196,7 +1266,9 @@
                     if (marginTop > 0) div.style.marginTop = `${marginTop}px`;
 
                     const content = document.createElement('div');
-                    content.className = `content ${styleClass} ${hiddenClass}`;
+                    // Add starred class
+                    const starredClass = isStarred ? 'starred-border' : '';
+                    content.className = `content ${styleClass} ${hiddenClass} ${starredClass}`;
                     content.onclick = () => openDetailModal(item.wo, item.activityCode, item.desc);
 
                     // --- Header Row ---
@@ -1295,6 +1367,7 @@
             data.forEach((item, index) => {
                 const activityColor = item.activityCode ? stringToColor(item.activityCode) : '#cbd5e1';
                 const isHidden = hiddenWOs.has(item.wo);
+                const isStarred = starredWOs.has(item.wo);
                 const hiddenClass = isHidden ? 'is-hidden-item' : '';
                 const isEvent = item.type === 'event';
                 
@@ -1314,9 +1387,10 @@
                 
                 const bgStyle = isEvent ? '' : activityColor;
                 const eventClass = isEvent ? 'event-card' : '';
+                const starredClass = isStarred ? 'starred-border' : '';
                 
                 const content = document.createElement('div');
-                content.className = `h-content ${hiddenClass} ${eventClass}`;
+                content.className = `h-content ${hiddenClass} ${eventClass} ${starredClass}`;
                 if (!isEvent) content.style.backgroundColor = bgStyle;
                 
                 // Aplicar posição dinâmica usando calc para precisão (25px é metade do eixo)
@@ -1348,7 +1422,9 @@
 
                 const dot = document.createElement('div');
                 dot.className = 'h-dot';
-                dot.style.backgroundColor = activityColor; // Cor no centro
+                // Black dot for events, color for activities
+                dot.style.backgroundColor = isEvent ? '#000000' : activityColor; 
+                
                 // Removemos o style.top fixo pois o CSS cuida da centralização agora
 
                 node.appendChild(content);
@@ -1664,7 +1740,7 @@
             notes[STORAGE_KEY_STARRED] = JSON.stringify([...starredWOs]);
             notes[STORAGE_KEY_HIDDEN] = JSON.stringify([...hiddenWOs]);
             
-            const settings = { currentFilter, isStarredFilter, isHiddenFilter, sortOrder, isHorizontalMode, horizontalLevels };
+            const settings = { currentFilter, isStarredFilter, isHiddenFilter, sortOrder, isHorizontalMode, horizontalLevels, cardLines };
             const title = document.getElementById('appTitle').innerText.trim() || "Cronograma_Manutencao";
             const projectData = { timestamp: new Date().toISOString(), data: fullData, notes: notes, settings: settings, meta: { subtitle: document.getElementById('reportDateSubtitle').innerText, title: title } };
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData));
