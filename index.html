@@ -575,7 +575,35 @@
             '#D291BC', '#FEC8D8', '#FFDFD3', '#B5EAD7', '#C7CEEA'
         ];
 
-        window.onload = function() { loadSavedData(); setupEventListeners(); }
+        window.onload = function() { 
+            // 1. Tenta carregar do localStorage
+            loadSavedData(); 
+            
+            // 2. Configura listeners
+            setupEventListeners();
+
+            // 3. Verifica URL Parameter para carregar JSON remoto (GitHub Pages)
+            const urlParams = new URLSearchParams(window.location.search);
+            const jsonUrl = urlParams.get('data');
+            
+            if (jsonUrl) {
+                console.log("Carregando JSON da URL:", jsonUrl);
+                fetch(jsonUrl)
+                    .then(response => {
+                        if(!response.ok) throw new Error("Erro de rede ao buscar JSON");
+                        return response.json();
+                    })
+                    .then(pd => {
+                        // Usa a função reutilizável para carregar os dados
+                        loadProjectData(pd);
+                        alert("Projeto carregado via Link!");
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert("Não foi possível carregar o arquivo da URL.");
+                    });
+            }
+        }
 
         function setupEventListeners() {
             // Tecla ESC para fechar modal
@@ -785,72 +813,76 @@
             reader.onload = function(e) {
                 try {
                     const pd = JSON.parse(e.target.result);
-                    if(!pd.data) throw new Error("Inválido");
-                    fullData = pd.data;
-                    fullData.forEach(item => item.rawDate = new Date(item.rawDate));
-                    
-                    // Restaurar Notas e Favoritos
-                    if(pd.notes) {
-                        Object.keys(pd.notes).forEach(k => {
-                            if(k === STORAGE_KEY_STARRED) {
-                                starredWOs = new Set(JSON.parse(pd.notes[k]));
-                                localStorage.setItem(STORAGE_KEY_STARRED, pd.notes[k]);
-                            } else {
-                                localStorage.setItem(k, pd.notes[k]);
-                            }
-                        });
-                    }
-                    
-                    // Restaurar Configurações de Visualização (se existirem)
-                    if (pd.settings) {
-                        isCompact = !!pd.settings.isCompact;
-                        isProportional = !!pd.settings.isProportional;
-                        currentFilter = pd.settings.currentFilter || 'all';
-                        isStarredFilter = !!pd.settings.isStarredFilter;
-                        sortOrder = pd.settings.sortOrder || 'asc';
-                        
-                        // Atualizar Controles da UI
-                        document.getElementById('compactModeSwitch').checked = isCompact;
-                        document.getElementById('proportionalModeSwitch').checked = isProportional;
-                        updateTimelineClass(); 
-                        
-                        document.querySelectorAll('.btn-filter').forEach(btn => {
-                            if(btn.id === 'btnFilterStar') {
-                                // Atualiza o botão de estrela separadamente
-                                btn.classList.toggle('active', isStarredFilter);
-                            } else {
-                                btn.classList.remove('active');
-                                const onclickAttr = btn.getAttribute('onclick');
-                                if (onclickAttr && onclickAttr.includes(`'${currentFilter}'`)) {
-                                    btn.classList.add('active');
-                                }
-                            }
-                        });
-                        
-                        const sortBtn = document.querySelector('.btn-sort');
-                        if (sortBtn) {
-                            sortBtn.innerText = sortOrder === 'asc' ? '📅 Antigos ⬇️' : '📅 Recentes ⬆️';
-                        }
-                    }
-
-                    // Restaurar Título
-                    if(pd.meta?.title) {
-                        document.getElementById('appTitle').innerText = pd.meta.title;
-                        localStorage.setItem(STORAGE_KEY_TITLE, pd.meta.title);
-                    }
-
-                    saveMainDataToStorage(fullData, { subtitle: pd.meta?.subtitle });
-                    document.getElementById('reportDateSubtitle').innerText = pd.meta?.subtitle || "Importado";
-                    applyFiltersAndRender();
+                    loadProjectData(pd);
                     alert("Importado com sucesso!");
-                    
-                    // Atualiza gráfico se estiver aberto
-                    if(isChartVisible) updateChart();
-
                 } catch (err) { alert("Erro ao importar."); console.error(err); }
                 input.value = '';
             };
             reader.readAsText(file);
+        }
+
+        // Nova Função Reutilizável: Carrega dados do JSON (seja de arquivo ou URL)
+        function loadProjectData(pd) {
+            if(!pd.data) throw new Error("Inválido");
+            fullData = pd.data;
+            fullData.forEach(item => item.rawDate = new Date(item.rawDate));
+            
+            // Restaurar Notas e Favoritos
+            if(pd.notes) {
+                Object.keys(pd.notes).forEach(k => {
+                    if(k === STORAGE_KEY_STARRED) {
+                        starredWOs = new Set(JSON.parse(pd.notes[k]));
+                        localStorage.setItem(STORAGE_KEY_STARRED, pd.notes[k]);
+                    } else {
+                        localStorage.setItem(k, pd.notes[k]);
+                    }
+                });
+            }
+            
+            // Restaurar Configurações de Visualização (se existirem)
+            if (pd.settings) {
+                isCompact = !!pd.settings.isCompact;
+                isProportional = !!pd.settings.isProportional;
+                currentFilter = pd.settings.currentFilter || 'all';
+                isStarredFilter = !!pd.settings.isStarredFilter;
+                sortOrder = pd.settings.sortOrder || 'asc';
+                
+                // Atualizar Controles da UI
+                document.getElementById('compactModeSwitch').checked = isCompact;
+                document.getElementById('proportionalModeSwitch').checked = isProportional;
+                updateTimelineClass(); 
+                
+                document.querySelectorAll('.btn-filter').forEach(btn => {
+                    if(btn.id === 'btnFilterStar') {
+                        // Atualiza o botão de estrela separadamente
+                        btn.classList.toggle('active', isStarredFilter);
+                    } else {
+                        btn.classList.remove('active');
+                        const onclickAttr = btn.getAttribute('onclick');
+                        if (onclickAttr && onclickAttr.includes(`'${currentFilter}'`)) {
+                            btn.classList.add('active');
+                        }
+                    }
+                });
+                
+                const sortBtn = document.querySelector('.btn-sort');
+                if (sortBtn) {
+                    sortBtn.innerText = sortOrder === 'asc' ? '📅 Antigos ⬇️' : '📅 Recentes ⬆️';
+                }
+            }
+
+            // Restaurar Título
+            if(pd.meta?.title) {
+                document.getElementById('appTitle').innerText = pd.meta.title;
+                localStorage.setItem(STORAGE_KEY_TITLE, pd.meta.title);
+            }
+
+            saveMainDataToStorage(fullData, { subtitle: pd.meta?.subtitle });
+            document.getElementById('reportDateSubtitle').innerText = pd.meta?.subtitle || "Importado";
+            applyFiltersAndRender();
+            
+            // Atualiza gráfico se estiver aberto
+            if(isChartVisible) updateChart();
         }
 
         function saveMainDataToStorage(dataRows, metaInfo) {
