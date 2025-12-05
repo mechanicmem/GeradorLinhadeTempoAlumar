@@ -36,7 +36,7 @@
             --ruler-color: #cbd5e1;
             --pixels-per-day: 40px; 
             /* Variável para controle dinâmico de linhas de texto no card horizontal */
-            --card-lines: 3;
+            --card-lines: 1; /* Padrão 1 */
         }
 
         /* Botão Discreto para Esconder Filtros */
@@ -389,9 +389,10 @@
 
         /* Borda Dourada MAIS DESTACADA no Modo Horizontal */
         .h-content.starred-border {
-            border: 4px solid var(--star-color) !important;
-            box-shadow: 0 0 15px rgba(234, 179, 8, 0.8) !important;
-            transform: translateX(-50%) scale(1.02); /* Leve aumento para destaque */
+            border: 2px solid var(--star-color) !important; /* Usuário pediu 2px */
+            box-shadow: 0 0 15px rgba(234, 179, 8, 0.9) !important;
+            /* REMOVIDO SCALE PARA CORRIGIR BUG DO PNG */
+            transform: translateX(-50%) !important; 
             z-index: 20;
         }
 
@@ -437,11 +438,13 @@
             margin: 0 60px 0 20px; /* Margem direita maior para a seta */
         }
         
-        /* Cabeça da Seta Ajustada */
+        /* Cabeça da Seta Ajustada (FIXED BUG v2 - CORREÇÃO DE ALINHAMENTO) */
         .h-axis::after {
             content: ''; 
             position: absolute; 
-            right: -40px; /* Deslocado para fora */
+            /* Estratégia LEFT: 100% ancora ao final absoluto do elemento */
+            left: 100%; 
+            margin-left: -5px; /* Pequeno overlap para evitar linha branca */
             top: 50%;
             transform: translateY(-50%);
             width: 0; 
@@ -449,6 +452,7 @@
             border-top: 40px solid transparent; 
             border-bottom: 40px solid transparent; 
             border-left: 45px solid #22c55e;
+            right: auto; /* Garante que right não interfira */
         }
 
         /* Item Wrapper */
@@ -522,15 +526,31 @@
         .h-content.event-card .h-date, .h-content.event-card .h-desc { color: white !important; }
 
         .h-date { font-size: 0.75rem; font-weight: bold; color: var(--text-color); display: block; margin-bottom: 2px; opacity: 0.8; }
+        
+        /* CORREÇÃO PARA O TEXTO DESCER (WRAP) */
         .h-desc { 
             font-size: 0.85rem; 
             font-weight: 600; 
             color: var(--text-color); 
-            line-height: 1.3; 
+            line-height: 1.15; /* Reduzido de 1.3 para 1.15 */
+            
+            /* Permite que o texto quebre linha */
+            white-space: normal; 
+            
+            /* Lógica de Clamping */
             display: -webkit-box; 
             -webkit-line-clamp: var(--card-lines); /* Controlado via JS */
             -webkit-box-orient: vertical; 
             overflow: hidden; 
+            
+            /* ALTURA MÍNIMA BASEADA EM EM */
+            min-height: calc(1.15em * var(--card-lines));
+        }
+
+        /* REVISÃO PARA EVENT CARDS NÃO AUMENTAREM */
+        .h-content.event-card .h-desc {
+            -webkit-line-clamp: 2 !important;
+            min-height: auto !important;
         }
 
         /* Modal */
@@ -641,7 +661,8 @@
                 
                 <label for="cardLinesInput">Linhas:</label>
                 <!-- CORREÇÃO APLICADA AQUI: onchange -> oninput -->
-                <input type="number" id="cardLinesInput" class="level-input" value="3" min="2" max="15" oninput="updateCardLines(this.value)">
+                <!-- CORREÇÃO: Valor inicial 1 -->
+                <input type="number" id="cardLinesInput" class="level-input" value="1" min="1" max="15" oninput="updateCardLines(this.value)">
             </div>
 
             <span style="border-left: 1px solid #ccc; margin: 0 5px;"></span>
@@ -827,7 +848,7 @@
         let currentActivityCode = null;
         let createType = 'wo'; 
         let horizontalLevels = 6; 
-        let cardLines = 3; // Nova variável de estado
+        let cardLines = 1; // Padrão alterado para 1
 
         let starredWOs = new Set();
         let hiddenWOs = new Set();
@@ -893,7 +914,7 @@
 
         function updateCardLines(val) {
             let lines = parseInt(val, 10);
-            if(lines < 2) lines = 2;
+            if(lines < 1) lines = 1; // Allow 1
             if(lines > 15) lines = 15;
             cardLines = lines; // Update state
             document.documentElement.style.setProperty('--card-lines', lines);
@@ -966,7 +987,8 @@
 
         // --- Screenshot Logic ---
         function captureScreenshot() {
-            const targetId = isHorizontalMode ? 'timelineHorizontal' : 'timelineList';
+            const isHorizontal = isHorizontalMode;
+            const targetId = isHorizontal ? 'timelineHorizontal' : 'timelineList';
             const element = document.getElementById(targetId);
             
             if(!element || element.style.display === 'none') {
@@ -974,20 +996,54 @@
                 return;
             }
 
-            // Para captura horizontal, precisamos garantir que o scroll seja capturado
-            // html2canvas faz isso por padrão, mas configuramos backgroundColor: null para transparência
+            // Salvar estilos originais
+            const originalBg = element.style.backgroundColor;
+            const originalWidth = element.style.width;
+
+            // Preparar para captura
+            element.style.backgroundColor = 'transparent'; // Remove o fundo do container
+            // Remove background gradient if present on .timeline
+            if (!isHorizontal) {
+                element.style.backgroundImage = 'none';
+            } else {
+                // FIXED BUG: Force element width to match scrollWidth to prevent clipping in HTML2Canvas
+                // Add padding to ensure arrow is captured
+                const scrollWidth = element.scrollWidth;
+                element.style.width = (scrollWidth + 100) + 'px'; 
+            }
             
-            html2canvas(element, {
-                backgroundColor: null, // Transparente
-                scrollX: 0,
-                scrollY: -window.scrollY // Ajuste para posição correta se a página estiver scrollada
-            }).then(canvas => {
+            let options = {
+                backgroundColor: null, // Transparente no canvas
+                scale: 2 // Melhor qualidade
+            };
+
+            if (isHorizontal) {
+                const fullWidth = element.scrollWidth + 100; // +100px buffer de segurança
+                options.width = fullWidth;
+                options.windowWidth = fullWidth;
+                options.scrollX = 0;
+            } else {
+                options.scrollY = -window.scrollY;
+            }
+
+            html2canvas(element, options).then(canvas => {
+                // Restaurar estilos
+                element.style.backgroundColor = originalBg;
+                element.style.width = originalWidth; // Restore width
+                
+                if (!isHorizontal) {
+                    element.style.backgroundImage = ''; // Restore
+                }
+                
                 const link = document.createElement('a');
-                link.download = `cronograma_${isHorizontalMode ? 'horizontal' : 'vertical'}_${new Date().getTime()}.png`;
+                link.download = `cronograma_${isHorizontal ? 'horizontal' : 'vertical'}_${new Date().getTime()}.png`;
                 link.href = canvas.toDataURL("image/png");
                 link.click();
             }).catch(err => {
                 console.error(err);
+                element.style.backgroundColor = originalBg; 
+                element.style.width = originalWidth;
+                if (!isHorizontal) element.style.backgroundImage = '';
                 alert("Erro ao gerar imagem.");
             });
         }
@@ -1257,7 +1313,7 @@
                     // Ícones SVG fixos
                     const starIcon = isStarred ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>`;
                     const starClass = isStarred ? 'starred' : '';
-                    const hideIcon = isHidden ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8-11-8-11-8-11-8-11-8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+                    const hideIcon = isHidden ? `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>` : `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8-11-8-11-8-11-8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
                     const hideBtnClass = isHidden ? 'hidden-active' : '';
 
                     const div = document.createElement('div');
